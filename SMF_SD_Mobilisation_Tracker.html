@@ -817,6 +817,11 @@ var SOURCE_HTML = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
 
 var LS_KEY = "smf_sd_tracker_v1";
 
+/* Team database baked into the page: anyone who opens the hosted tracker
+   joins live sync automatically, so the plain page URL is the share link.
+   Set to "" to make live sync opt-in again. */
+var DEFAULT_SYNC_URL = "https://hms-33bef-default-rtdb.asia-southeast1.firebasedatabase.app/";
+
 var STATUSES = [
   { key:"not_started", label:"Not started yet" },
   { key:"working",     label:"Working on it" },
@@ -930,6 +935,14 @@ function freshState(){
 var ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 var state;
+var autoJoinedNow = false;
+function joinDefaultSync(s){
+  // Age local timestamps so the team's data wins the first merge instead of
+  // being overwritten by this device's untouched copy.
+  s.tasks.forEach(function(t){ t.updatedAt = 0; });
+  s.sync = { url: DEFAULT_SYNC_URL };
+  autoJoinedNow = true;
+}
 function load(){
   try{
     var raw = localStorage.getItem(LS_KEY);
@@ -951,6 +964,10 @@ function load(){
             t.due = "";
           }
         });
+        // Devices that opened the tracker before the team database was baked
+        // in: join it now (unless live sync was explicitly turned off).
+        // Must run after the updatedAt backfill above so the aging sticks.
+        if(!s.sync.url && DEFAULT_SYNC_URL && !s.sync.optOut) joinDefaultSync(s);
         state = s;
         return;
       }
@@ -974,6 +991,7 @@ function load(){
     return;
   }
   state = freshState();
+  if(DEFAULT_SYNC_URL) joinDefaultSync(state);
   persist(false);
 }
 function readBootstrap(){
@@ -1685,6 +1703,11 @@ function shareLink(){
   // With live sync on, the data lives in the shared database — the link
   // only needs to carry the connection, which keeps it short.
   if(state.sync && state.sync.url){
+    // On the team database the page itself carries the connection, so the
+    // plain address is enough — use the folder URL, which is shortest.
+    if(state.sync.url === DEFAULT_SYNC_URL && location.protocol !== "file:"){
+      return base.replace(/SMF_SD_Mobilisation_Tracker\.html$/, "");
+    }
     return base + "#join=" + b64urlEncode(JSON.stringify({ url: state.sync.url }));
   }
   var payload = JSON.stringify({
@@ -1732,7 +1755,9 @@ function renderShareModal(){
   if(isFile){
     html += '<div class="warn-box">This tracker is open as a <strong>file on this device</strong>, so the link below points to a location only this device can see — it will NOT open on anyone else’s phone or computer. Use the file option above, or host the tracker on a website to get a real shareable address.</div>';
   }
-  if(syncOn){
+  if(syncOn && state.sync.url === DEFAULT_SYNC_URL && !isFile){
+    html += '<p class="hint">The team connection is built into the page itself, so the link is just the web address — anyone who opens it joins the shared tracker automatically.</p>';
+  }else if(syncOn){
     html += '<p class="hint">Live sync is on, so this link is short — it carries only the connection. Anyone who opens it joins the shared tracker'+(isFile?' (once the tracker is hosted on a website)':'')+'.</p>';
   }else{
     html += '<p class="hint">Live sync is off, so the link must carry every task inside it — that’s why it’s long. Turn on live sync (⚙ menu) to get a short link and automatic updates.</p>';
@@ -1931,7 +1956,8 @@ $("btnSyncConnect").addEventListener("click", function(){
   toast("Live sync on. Now click “Copy share link” and send it to the team.", null, null, 5000);
 });
 $("btnSyncOff").addEventListener("click", function(){
-  state.sync = { url: "" };
+  // optOut stops the baked-in team database from auto-reconnecting on reload.
+  state.sync = { url: "", optOut: true };
   persist(false);
   disconnectSync();
   setSyncStatus("local");
@@ -2078,7 +2104,7 @@ load();
     var join = null;
     try{ join = decodeJoinFragment(location.hash); }catch(e){}
     history.replaceState(null, "", location.pathname + location.search);
-    if(join && join.url){
+    if(join && join.url && String(join.url) !== (state.sync && state.sync.url)){
       if(confirm("This link connects you to the team's live shared tracker.\n\nJoin it? The team's data will replace whatever is saved on this device.")){
         // Let the team's data win the first merge: age out local timestamps.
         state.tasks.forEach(function(t){ t.updatedAt = 0; });
@@ -2090,6 +2116,9 @@ load();
 })();
 render();
 if(syncDocUrl()) connectSync();
+if(autoJoinedNow && syncDocUrl()){
+  toast("Connected to the team's live tracker — updates sync automatically.", null, null, 4500);
+}
 
 })();
 </script>
