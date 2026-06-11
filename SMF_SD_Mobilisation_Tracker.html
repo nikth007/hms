@@ -100,6 +100,18 @@
   .setup-steps{padding-left:20px;font-size:12.5px;color:var(--text-soft);margin:0 0 14px;}
   .setup-steps li{margin-bottom:6px;}
   .setup-steps code{background:var(--gray-badge);padding:1px 5px;border-radius:4px;font-size:11.5px;}
+  .share-sec{margin-bottom:16px;}
+  .share-sec h4{font-size:13px;font-weight:600;margin-bottom:6px;}
+  .warn-box{
+    background:#FCF1E0;border:1px solid #E8CFA3;border-radius:8px;
+    padding:10px 12px;font-size:12.5px;color:#8A6D00;margin-bottom:14px;
+  }
+  .ok-box{
+    background:var(--rag-green-bg);border:1px solid #B9DCC8;border-radius:8px;
+    padding:10px 12px;font-size:12.5px;color:var(--rag-green);margin-bottom:14px;
+  }
+  .link-row{display:flex;gap:8px;}
+  .link-row input{flex:1;border:1px solid var(--gray-border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text-soft);min-width:0;}
 
   /* ---------- Layout & tabs ---------- */
   .wrap{max-width:1240px;margin:0 auto;padding:16px 20px 80px;}
@@ -784,11 +796,24 @@
   </div>
 </div>
 
+<!-- Share modal -->
+<div class="overlay" id="shareOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3>Share this tracker</h3><button class="modal-close" data-close="shareOverlay">×</button></div>
+    <div class="modal-body" id="shareBody"></div>
+    <div class="modal-foot"><button class="btn" data-close="shareOverlay">Close</button></div>
+  </div>
+</div>
+
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
 (function(){
 "use strict";
+
+// Captured before anything renders, so a clean copy of this file can be
+// regenerated (with current data baked in) for the "share a copy" flow.
+var SOURCE_HTML = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
 
 var LS_KEY = "smf_sd_tracker_v1";
 
@@ -931,8 +956,30 @@ function load(){
       }
     }
   }catch(e){ /* corrupted storage — fall back to seed */ }
+  // First open on this device: a "share copy" of this file carries the
+  // sender's data in an embedded JSON block — prefer it over seed data.
+  var boot = readBootstrap();
+  if(boot && Array.isArray(boot.tasks) && boot.tasks.length){
+    state = freshState();
+    var maxId = 0;
+    state.tasks = boot.tasks.map(function(t){
+      var n = normalizeTask(t);
+      maxId = Math.max(maxId, n.id);
+      return n;
+    });
+    state.tasks.forEach(function(t){ if(!t.id) t.id = ++maxId; });
+    state.nextId = Math.max(maxId+1, parseInt(boot.nextId,10)||0, 1);
+    if(boot.sync && boot.sync.url) state.sync = { url:String(boot.sync.url) };
+    persist(false);
+    return;
+  }
   state = freshState();
   persist(false);
+}
+function readBootstrap(){
+  var el = document.getElementById("bootstrapData");
+  if(!el) return null;
+  try{ return JSON.parse(el.textContent); }catch(e){ return null; }
 }
 function persist(touch){
   if(touch !== false) state.lastUpdated = Date.now();
@@ -1634,12 +1681,16 @@ function b64urlDecode(str){
   return decodeURIComponent(escape(atob(str)));
 }
 function shareLink(){
+  var base = location.href.split("#")[0];
+  // With live sync on, the data lives in the shared database — the link
+  // only needs to carry the connection, which keeps it short.
+  if(state.sync && state.sync.url){
+    return base + "#join=" + b64urlEncode(JSON.stringify({ url: state.sync.url }));
+  }
   var payload = JSON.stringify({
     app:"smf_sd_tracker", version:2, nextId:state.nextId,
-    sync: (state.sync && state.sync.url) ? { url: state.sync.url } : undefined,
     tasks:liveTasks()
   });
-  var base = location.href.split("#")[0];
   return base + "#data=" + b64urlEncode(payload);
 }
 function decodeShareFragment(link){
@@ -1647,8 +1698,65 @@ function decodeShareFragment(link){
   if(!m) return null;
   return JSON.parse(b64urlDecode(m[1]));
 }
+function decodeJoinFragment(link){
+  var m = /#join=([A-Za-z0-9\-_]+)/.exec(link);
+  if(!m) return null;
+  return JSON.parse(b64urlDecode(m[1]));
+}
+
+/* ---------- share dialog ---------- */
+function shareCopyHtml(){
+  var payload = JSON.stringify({
+    app: "smf_sd_tracker", version: 2,
+    nextId: state.nextId,
+    sync: (state.sync && state.sync.url) ? { url: state.sync.url } : undefined,
+    tasks: liveTasks()
+  }).replace(/<\//g, "<\\/");
+  var html = SOURCE_HTML.replace(/<script id="bootstrapData"[^>]*>[\s\S]*?<\/script>\s*/, "");
+  var tag = '<script id="bootstrapData" type="application/json">' + payload + '</' + 'script>\n';
+  var idx = html.indexOf("<script>");
+  return idx === -1 ? html + tag : html.slice(0, idx) + tag + html.slice(idx);
+}
+function renderShareModal(){
+  var isFile = location.protocol === "file:";
+  var syncOn = !!(state.sync && state.sync.url);
+  var link = shareLink();
+  var html = "";
+
+  html += '<div class="share-sec"><h4>Send the tracker file — works for everyone</h4>'+
+    '<p class="hint">Downloads a copy of this tracker with all current tasks'+(syncOn?' and the live-sync connection':'')+' built in. '+
+    'Send it on WhatsApp or email; colleagues just open it in their browser'+(syncOn?' and they’re connected live automatically':'')+'.</p>'+
+    '<button class="btn btn-primary" id="btnShareCopyFile">Download a ready-to-share copy</button></div>';
+
+  html += '<div class="share-sec"><h4>Or copy a link</h4>';
+  if(isFile){
+    html += '<div class="warn-box">This tracker is open as a <strong>file on this device</strong>, so the link below points to a location only this device can see — it will NOT open on anyone else’s phone or computer. Use the file option above, or host the tracker on a website to get a real shareable address.</div>';
+  }
+  if(syncOn){
+    html += '<p class="hint">Live sync is on, so this link is short — it carries only the connection. Anyone who opens it joins the shared tracker'+(isFile?' (once the tracker is hosted on a website)':'')+'.</p>';
+  }else{
+    html += '<p class="hint">Live sync is off, so the link must carry every task inside it — that’s why it’s long. Turn on live sync (⚙ menu) to get a short link and automatic updates.</p>';
+  }
+  html += '<div class="link-row"><input type="text" readonly id="shareLinkBox" value="'+esc(link)+'">'+
+    '<button class="btn" id="btnCopyShareLink">Copy</button></div></div>';
+
+  $("shareBody").innerHTML = html;
+  $("btnShareCopyFile").addEventListener("click", function(){
+    var blob = new Blob([shareCopyHtml()], { type:"text/html" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "SMF_SD_Tracker_share.html";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+    toast("Share copy downloaded — send the file to your team.", null, null, 4000);
+  });
+  $("btnCopyShareLink").addEventListener("click", function(){
+    copyText(link, "Link copied.");
+  });
+}
 $("btnShareLink").addEventListener("click", function(){
-  copyText(shareLink(), "Share link copied. Anyone who opens it gets this exact data.");
+  renderShareModal();
+  openOverlay("shareOverlay");
 });
 function copyText(text, okMsg){
   function fallback(){
@@ -1953,9 +2061,10 @@ setInterval(function(){ if(!document.querySelector(".edit-input, .status-select"
 
 /* ---------- boot ---------- */
 load();
-// Share-link import: if opened via a #data= link, offer to load it.
+// Share-link import: handle #data= (full snapshot) and #join= (live sync invite).
 (function(){
-  if(location.hash && location.hash.indexOf("#data=")===0){
+  if(!location.hash) return;
+  if(location.hash.indexOf("#data=")===0){
     var data = null;
     try{ data = decodeShareFragment(location.hash); }catch(e){}
     history.replaceState(null, "", location.pathname + location.search);
@@ -1963,6 +2072,18 @@ load();
       if(confirm("This link carries shared tracker data ("+data.tasks.length+" tasks).\n\nLoad it? It will replace the data saved on this device.")){
         applyImport(data);
         adoptSyncFrom(data);
+      }
+    }
+  }else if(location.hash.indexOf("#join=")===0){
+    var join = null;
+    try{ join = decodeJoinFragment(location.hash); }catch(e){}
+    history.replaceState(null, "", location.pathname + location.search);
+    if(join && join.url){
+      if(confirm("This link connects you to the team's live shared tracker.\n\nJoin it? The team's data will replace whatever is saved on this device.")){
+        // Let the team's data win the first merge: age out local timestamps.
+        state.tasks.forEach(function(t){ t.updatedAt = 0; });
+        state.sync = { url: String(join.url) };
+        persist(false);
       }
     }
   }
