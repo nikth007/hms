@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0F6E56">
 <title>SMF — Service Delivery Mobilisation Tracker</title>
 <style>
   :root{
@@ -239,20 +240,79 @@
   .toast button{background:none;border:none;color:#7FD4BC;font-weight:600;font-size:13px;}
   .toast button:hover{text-decoration:underline;}
 
+  .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+
   /* ---------- Mobile ---------- */
   @media (max-width:760px){
-    .summary{grid-template-columns:repeat(2,1fr);}
+    body{font-size:14px;}
+    /* Top bar: title row, then a wrapping row of compact buttons */
+    .topbar{position:static;padding:10px 12px;gap:8px;}
+    .topbar .spacer{display:none;}
+    .titleblock{flex:1;min-width:0;}
+    .titleblock h1{font-size:15px;}
+    .actions{flex-basis:100%;}
+    .actions .btn{padding:7px 9px;font-size:12px;}
+
+    /* Summary: Total spans full width, the four statuses sit 2×2 */
+    .summary{grid-template-columns:repeat(2,1fr);gap:8px;}
+    .stat.total{grid-column:1 / -1;display:flex;align-items:baseline;gap:10px;}
+    .stat{padding:10px 12px;}
+    .stat .num{font-size:21px;}
+
+    /* Filters: stacked, full-width controls */
+    .filters{flex-direction:column;align-items:stretch;gap:6px;padding:12px 14px;}
+    .filters label{margin-bottom:-2px;}
+    .filters select{max-width:none;width:100%;padding:9px 8px;}
+    .filters .clear-filters{margin-left:0;align-self:flex-end;padding:6px 0;}
+
+    /* Task rows become cards: "1.1  [badge]" header, name, then fields */
     .task-grid-head{display:none;}
     .task-row{
-      display:block;padding:12px 16px;
+      display:grid;
+      grid-template-columns:auto 1fr;
+      grid-template-areas:
+        "num   status"
+        "name  name"
+        "owner owner"
+        "due   due"
+        "notes notes";
+      gap:8px 10px;
+      padding:12px 44px 12px 14px;
+      position:relative;
     }
-    .task-row > div{margin-bottom:8px;}
-    .task-row > div:last-child{margin-bottom:0;}
+    .tnum{grid-area:num;font-weight:600;color:var(--text);padding-top:3px;}
+    .tstatus{grid-area:status;justify-self:start;}
+    .tstatus .cell-label{display:none;}
+    .tname{grid-area:name;font-size:15px;line-height:1.4;}
+    .tname .cell-label{display:none;}
+    .towner{grid-area:owner;}
+    .tdue{grid-area:due;}
+    .tnotes{grid-area:notes;}
     .cell-label{display:block;}
-    .tnum{font-weight:600;color:var(--text);}
-    .row-menu-wrap{justify-self:start;}
-    .topbar{padding:10px 14px;}
-    .wrap{padding:14px 12px 80px;}
+    .row-menu-wrap{position:absolute;top:9px;right:6px;}
+    .dots-btn{padding:6px 9px;font-size:18px;}
+    .row-menu{position:absolute;}
+
+    /* Bigger touch targets */
+    .badge{padding:5px 12px;font-size:13px;}
+    .editable{padding:4px 5px;margin:-4px -5px;}
+    .ws-head{padding:13px 14px;}
+    .ws-foot,.task-row{padding-left:14px;}
+    .add-task-btn{padding:10px 12px;}
+
+    /* 16px inputs stop iOS Safari from auto-zooming on focus */
+    input,textarea,select,.edit-input,.status-select{font-size:16px;}
+
+    /* Modals: near-full-width sheets with comfortable buttons */
+    .overlay{padding:14px 8px;}
+    .modal-body{padding:14px;}
+    .modal-foot{padding:12px 14px;}
+    .modal-foot .btn{flex:1;justify-content:center;padding:11px 10px;font-size:14px;}
+
+    .raci-table-wrap{-webkit-overflow-scrolling:touch;}
+    .wrap{padding:12px 10px 80px;}
+    .toast-wrap{left:10px;right:10px;transform:none;}
+    .toast{width:100%;justify-content:space-between;}
   }
 
   /* ---------- Print / PDF-ready view ---------- */
@@ -287,6 +347,7 @@
     <div class="updated" id="lastUpdated">Last updated: —</div>
   </div>
   <span class="spacer"></span>
+  <div class="actions">
   <button class="btn" id="btnShareLink" title="Copy a link that carries all current data">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6.5 9.5 9.5 6.5M5 11l-1.5 1.5a2.5 2.5 0 0 1-3.5-3.5L2.5 7M11 5l1.5-1.5a2.5 2.5 0 0 1 3.5 3.5L13.5 9" transform="scale(.9) translate(.5 .5)"/></svg>
     Copy share link
@@ -310,6 +371,7 @@
     <div class="gear-menu" id="gearMenu">
       <button id="btnReset" class="danger">Reset to original task list</button>
     </div>
+  </div>
   </div>
 </header>
 
@@ -1050,6 +1112,14 @@ $("raciHead").addEventListener("click", function(){
   state.raciCollapsed = !state.raciCollapsed;
   persist(false);
   render();
+});
+
+/* Keep multiple open tabs on the same device in sync */
+window.addEventListener("storage", function(e){
+  if(e.key === LS_KEY && e.newValue){
+    load();
+    render();
+  }
 });
 
 /* ---------- boot ---------- */
