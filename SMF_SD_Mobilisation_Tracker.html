@@ -311,34 +311,6 @@
   table.raci td.empty-cell{color:#C5CBD0;text-align:center;}
   .raci-note{padding:0 16px 14px;font-size:12px;color:var(--text-soft);}
 
-  /* ---------- Project team hierarchy ---------- */
-  .team-section{
-    background:#fff;border:1px solid var(--gray-border);border-radius:12px;
-    padding:18px 16px 22px;margin-bottom:14px;box-shadow:var(--shadow-sm);
-  }
-  .team-section h2{font-size:14.5px;font-weight:600;text-align:center;margin-bottom:4px;}
-  .team-section .sub{text-align:center;font-size:12px;color:var(--text-soft);margin-bottom:16px;}
-  .tier{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;}
-  .tier-link{width:2px;height:16px;background:#CDD6D2;margin:4px auto;}
-  .tier-label{text-align:center;font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--text-soft);margin-bottom:8px;}
-  .person-card{
-    border:1px solid var(--gray-border);border-radius:12px;padding:9px 16px;
-    display:flex;align-items:center;gap:10px;background:#fff;box-shadow:var(--shadow-sm);
-  }
-  .person-card.advisor{border-style:dashed;background:#FCFDFC;}
-  .avatar{
-    width:36px;height:36px;border-radius:50%;color:#fff;font-weight:700;font-size:13px;
-    display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:.5px;
-  }
-  .av1{background:linear-gradient(135deg,#0F6E56,#16916F);}
-  .av2{background:linear-gradient(135deg,#1B5FAB,#3B82F6);}
-  .av3{background:linear-gradient(135deg,#7C3AED,#A78BFA);}
-  .av4{background:linear-gradient(135deg,#B45309,#F59E0B);}
-  .av5{background:linear-gradient(135deg,#BE185D,#EC4899);}
-  .av6{background:linear-gradient(135deg,#0E7490,#22D3EE);}
-  .pname{font-weight:600;font-size:13px;}
-  .prole{font-size:11px;color:var(--text-soft);}
-
   /* ---------- Dashboard page ---------- */
   .dash-hero{
     background:linear-gradient(135deg,#0F6E56 0%,#13855F 60%,#16916F 100%);
@@ -530,7 +502,6 @@
     .dash-hero .big{font-size:34px;}
     .kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
     .dash-panels{grid-template-columns:1fr;}
-    .person-card{width:100%;}
     .raci-table-wrap{-webkit-overflow-scrolling:touch;}
     .wrap{padding:12px 10px 80px;}
     .toast-wrap{left:10px;right:10px;transform:none;}
@@ -548,7 +519,7 @@
     .ws-body{overflow:visible;}
     .topbar{position:static;border-bottom:2px solid var(--teal);box-shadow:none;}
     .ws.collapsed .ws-body{display:block !important;}
-    .ws,.stat,.kpi,.panel,.team-section{border-color:#bbb;box-shadow:none;}
+    .ws,.stat,.kpi,.panel{border-color:#bbb;box-shadow:none;}
     .ws{break-inside:avoid;page-break-inside:avoid;}
     .editable:hover{background:none;outline:none;}
     .editable:empty::before{content:"";}
@@ -667,40 +638,6 @@
           <strong style="color:#9A6700">Needs to be asked</strong> = give input before it's done &nbsp;•&nbsp;
           <span>Gets update = kept in the loop</span>
         </div>
-      </div>
-    </section>
-
-    <section class="team-section">
-      <h2>Project team</h2>
-      <div class="sub">Who's who on this mobilisation — for reference</div>
-
-      <div class="tier-label">Project Chairperson</div>
-      <div class="tier">
-        <div class="person-card"><span class="avatar av3">AR</span><span><span class="pname">Dr. Arjun Rangarajan</span><br><span class="prole">Director · JMT · Project Chairperson</span></span></div>
-      </div>
-      <div class="tier-link"></div>
-
-      <div class="tier-label">Project Head &amp; Advisors</div>
-      <div class="tier">
-        <div class="person-card"><span class="avatar av1">AL</span><span><span class="pname">Mr. Alex</span><br><span class="prole">Project Head</span></span></div>
-        <div class="person-card advisor"><span class="avatar av6">SI</span><span><span class="pname">Dr. Sindhuja</span><br><span class="prole">Project Advisor</span></span></div>
-        <div class="person-card advisor"><span class="avatar av6">VA</span><span><span class="pname">Ms. Vamci</span><br><span class="prole">Project Advisor</span></span></div>
-      </div>
-      <div class="tier-link"></div>
-
-      <div class="tier-label">Department Heads &amp; Product Owner</div>
-      <div class="tier">
-        <div class="person-card"><span class="avatar av1">MA</span><span><span class="pname">Ms. Thirumamangai (Mangai)</span><br><span class="prole">SD HOD</span></span></div>
-        <div class="person-card"><span class="avatar av4">AM</span><span><span class="pname">Mrs. Amudha</span><br><span class="prole">PR HOD — OP (Mogappair)</span></span></div>
-        <div class="person-card"><span class="avatar av4">AN</span><span><span class="pname">Mrs. Anuradha</span><br><span class="prole">PR HOD — IP (Anna Nagar)</span></span></div>
-        <div class="person-card"><span class="avatar av2">NI</span><span><span class="pname">Nikthesh</span><br><span class="prole">Product Owner</span></span></div>
-      </div>
-      <div class="tier-link"></div>
-
-      <div class="tier-label">Team Leads</div>
-      <div class="tier">
-        <div class="person-card"><span class="avatar av5">SA</span><span><span class="pname">Ms. Sandhya</span><br><span class="prole">SD TL — OP (Mogappair)</span></span></div>
-        <div class="person-card"><span class="avatar av5">CH</span><span><span class="pname">Ms. Chitra</span><br><span class="prole">SD TL — IP (Anna Nagar)</span></span></div>
       </div>
     </section>
 
