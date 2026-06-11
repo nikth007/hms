@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMF — Service Delivery Mobilisation Tracker</title>
+<style>
+  :root{
+    --teal:#0F6E56;
+    --teal-soft:#E6F2EE;
+    --gray-bg:#F7F8F9;
+    --gray-border:#E3E6E8;
+    --text:#1F2933;
+    --text-soft:#5B6770;
+    --gray-badge:#EEF0F2;
+    --gray-badge-text:#5B6770;
+    --blue-badge:#E3EEFB;
+    --blue-badge-text:#1B5FAB;
+    --red-badge:#FDECE7;
+    --red-badge-text:#C04A1E;
+    --green-badge:#E4F3EA;
+    --green-badge-text:#1F7A43;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--gray-bg);
+    color:var(--text);
+    font-size:14px;
+    line-height:1.45;
+  }
+  button{font-family:inherit;font-size:13px;cursor:pointer;}
+  select,input,textarea{font-family:inherit;font-size:13px;color:var(--text);}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    background:#fff;border-bottom:1px solid var(--gray-border);
+    padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    position:sticky;top:0;z-index:50;
+  }
+  .logo{
+    background:var(--teal);color:#fff;font-weight:700;letter-spacing:1px;
+    padding:6px 10px;border-radius:6px;font-size:15px;
+  }
+  .titleblock h1{font-size:17px;font-weight:600;}
+  .titleblock .updated{font-size:11.5px;color:var(--text-soft);}
+  .topbar .spacer{flex:1;}
+  .btn{
+    background:#fff;border:1px solid var(--gray-border);border-radius:6px;
+    padding:7px 12px;color:var(--text);display:inline-flex;align-items:center;gap:6px;
+  }
+  .btn:hover{border-color:var(--teal);color:var(--teal);}
+  .btn-primary{background:var(--teal);border-color:var(--teal);color:#fff;}
+  .btn-primary:hover{background:#0c5a46;color:#fff;}
+  .btn svg{width:14px;height:14px;}
+  .gear-wrap{position:relative;}
+  .gear-menu{
+    display:none;position:absolute;right:0;top:calc(100% + 6px);background:#fff;
+    border:1px solid var(--gray-border);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.1);
+    min-width:200px;z-index:60;overflow:hidden;
+  }
+  .gear-menu.open{display:block;}
+  .gear-menu button{
+    display:block;width:100%;text-align:left;background:none;border:none;
+    padding:10px 14px;
+  }
+  .gear-menu button:hover{background:var(--gray-bg);}
+  .gear-menu .danger{color:#C04A1E;}
+
+  /* ---------- Layout ---------- */
+  .wrap{max-width:1240px;margin:0 auto;padding:18px 20px 80px;}
+
+  /* ---------- Summary strip ---------- */
+  .summary{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px;}
+  .stat{
+    background:#fff;border:1px solid var(--gray-border);border-radius:10px;
+    padding:12px 16px;
+  }
+  .stat .num{font-size:24px;font-weight:700;}
+  .stat .lbl{font-size:12px;color:var(--text-soft);margin-top:2px;}
+  .stat.total .num{color:var(--teal);}
+  .stat.done .num{color:var(--green-badge-text);}
+  .stat.working .num{color:var(--blue-badge-text);}
+  .stat.stuck .num{color:var(--red-badge-text);}
+  .stat.notstarted .num{color:var(--gray-badge-text);}
+
+  /* ---------- Filters ---------- */
+  .filters{
+    display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;
+    background:#fff;border:1px solid var(--gray-border);border-radius:10px;padding:10px 14px;
+  }
+  .filters label{font-size:12px;color:var(--text-soft);}
+  .filters select{
+    border:1px solid var(--gray-border);border-radius:6px;padding:6px 8px;background:#fff;
+    max-width:240px;
+  }
+  .filters .clear-filters{margin-left:auto;background:none;border:none;color:var(--teal);font-size:12px;}
+  .filters .clear-filters:hover{text-decoration:underline;}
+
+  /* ---------- Workstream panels ---------- */
+  .ws{
+    background:#fff;border:1px solid var(--gray-border);border-radius:10px;
+    margin-bottom:14px;overflow:hidden;
+  }
+  .ws-head{
+    display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;
+    user-select:none;background:#fff;
+  }
+  .ws-head:hover{background:#FBFCFC;}
+  .ws-head .chev{transition:transform .15s;color:var(--text-soft);flex-shrink:0;}
+  .ws.collapsed .ws-head .chev{transform:rotate(-90deg);}
+  .ws-head h2{font-size:14.5px;font-weight:600;flex:1;}
+  .ws-head .ws-count{font-size:12px;color:var(--text-soft);}
+  .ws-body{border-top:1px solid var(--gray-border);}
+  .ws.collapsed .ws-body{display:none;}
+
+  .task-grid-head,.task-row{
+    display:grid;
+    grid-template-columns:56px minmax(220px,1.4fr) 170px 150px 130px minmax(180px,1.2fr) 36px;
+    gap:8px;align-items:start;padding:9px 16px;
+  }
+  .task-grid-head{
+    font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-soft);
+    border-bottom:1px solid var(--gray-border);background:#FBFCFC;padding-top:7px;padding-bottom:7px;
+  }
+  .task-row{border-bottom:1px solid #F0F2F3;}
+  .task-row:last-child{border-bottom:none;}
+  .task-row:hover{background:#FBFCFC;}
+  .tnum{color:var(--text-soft);font-variant-numeric:tabular-nums;padding-top:2px;}
+  .cell-label{display:none;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-soft);margin-bottom:2px;}
+
+  .editable{border-radius:5px;padding:2px 5px;margin:-2px -5px;min-height:1.4em;cursor:text;}
+  .editable:hover{background:var(--teal-soft);outline:1px dashed rgba(15,110,86,.35);}
+  .editable:empty::before{content:"—";color:#B7BEC4;}
+  .edit-input{
+    width:100%;border:1px solid var(--teal);border-radius:5px;padding:3px 5px;
+    font-size:13px;background:#fff;outline:none;resize:vertical;
+  }
+  .tname.done-task .editable{text-decoration:line-through;color:var(--text-soft);}
+  .tnotes .editable{color:var(--text-soft);font-size:12.5px;}
+  .tdue .editable{font-size:12.5px;}
+
+  /* ---------- Status badges ---------- */
+  .badge{
+    display:inline-flex;align-items:center;gap:5px;border-radius:20px;
+    padding:3px 10px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;
+    border:1px solid transparent;
+  }
+  .badge svg{width:11px;height:11px;flex-shrink:0;}
+  .badge:hover{border-color:currentColor;}
+  .badge.not_started{background:var(--gray-badge);color:var(--gray-badge-text);}
+  .badge.working{background:var(--blue-badge);color:var(--blue-badge-text);}
+  .badge.stuck{background:var(--red-badge);color:var(--red-badge-text);}
+  .badge.done{background:var(--green-badge);color:var(--green-badge-text);}
+  .status-select{border:1px solid var(--teal);border-radius:6px;padding:3px 4px;max-width:100%;}
+
+  /* ---------- Row menu ---------- */
+  .row-menu-wrap{position:relative;justify-self:end;}
+  .dots-btn{
+    background:none;border:none;color:var(--text-soft);border-radius:5px;
+    padding:2px 6px;font-size:16px;line-height:1;letter-spacing:1px;
+  }
+  .dots-btn:hover{background:var(--gray-badge);color:var(--text);}
+  .row-menu{
+    display:none;position:absolute;right:0;top:calc(100% + 2px);background:#fff;
+    border:1px solid var(--gray-border);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.12);
+    min-width:170px;z-index:40;overflow:hidden;
+  }
+  .row-menu.open{display:block;}
+  .row-menu button{display:block;width:100%;text-align:left;background:none;border:none;padding:9px 13px;}
+  .row-menu button:hover{background:var(--gray-bg);}
+  .row-menu .danger{color:#C04A1E;}
+
+  .ws-foot{padding:10px 16px;border-top:1px solid #F0F2F3;}
+  .add-task-btn{
+    background:none;border:1px dashed var(--gray-border);border-radius:6px;
+    padding:6px 12px;color:var(--text-soft);width:100%;text-align:left;
+  }
+  .add-task-btn:hover{border-color:var(--teal);color:var(--teal);}
+
+  .empty-msg{padding:14px 16px;color:var(--text-soft);font-size:13px;}
+
+  /* ---------- Who does what ---------- */
+  .raci-table-wrap{overflow-x:auto;padding:0 16px 14px;}
+  table.raci{border-collapse:collapse;width:100%;min-width:760px;margin-top:6px;}
+  table.raci th,table.raci td{
+    border:1px solid var(--gray-border);padding:8px 10px;font-size:12.5px;vertical-align:top;text-align:left;
+  }
+  table.raci th{background:#FBFCFC;font-weight:600;}
+  table.raci td .role{display:block;white-space:nowrap;}
+  table.raci td .role.doing{color:var(--teal);font-weight:600;}
+  table.raci td .role.signs{color:var(--blue-badge-text);}
+  table.raci td .role.gets{color:var(--text-soft);}
+  table.raci td.empty-cell{color:#C5CBD0;text-align:center;}
+  .raci-note{padding:0 16px 14px;font-size:12px;color:var(--text-soft);}
+
+  /* ---------- Modals ---------- */
+  .overlay{
+    display:none;position:fixed;inset:0;background:rgba(20,30,35,.45);z-index:100;
+    align-items:flex-start;justify-content:center;padding:6vh 16px;overflow-y:auto;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:#fff;border-radius:12px;max-width:640px;width:100%;
+    box-shadow:0 16px 50px rgba(0,0,0,.25);
+  }
+  .modal-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px;border-bottom:1px solid var(--gray-border);
+  }
+  .modal-head h3{font-size:15px;font-weight:600;}
+  .modal-close{background:none;border:none;font-size:18px;color:var(--text-soft);padding:2px 8px;border-radius:5px;}
+  .modal-close:hover{background:var(--gray-badge);}
+  .modal-body{padding:16px 18px;}
+  .modal-body p.hint{font-size:12.5px;color:var(--text-soft);margin-bottom:10px;}
+  .modal-body textarea{
+    width:100%;min-height:160px;border:1px solid var(--gray-border);border-radius:8px;
+    padding:10px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;
+  }
+  .modal-body input[type=text]{
+    width:100%;border:1px solid var(--gray-border);border-radius:8px;padding:8px 10px;
+  }
+  .modal-foot{padding:12px 18px;border-top:1px solid var(--gray-border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
+  .field-row{margin-bottom:12px;}
+  .field-row label{display:block;font-size:12px;color:var(--text-soft);margin-bottom:4px;}
+  .field-row input[type=text],.field-row select,.field-row textarea{
+    width:100%;border:1px solid var(--gray-border);border-radius:8px;padding:8px 10px;min-height:auto;
+    font-family:inherit;font-size:13px;
+  }
+  .field-row textarea{min-height:70px;}
+  .modal-section-divider{border-top:1px solid var(--gray-border);margin:16px -18px 14px;}
+
+  /* ---------- Toast ---------- */
+  .toast-wrap{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;align-items:center;}
+  .toast{
+    background:#243038;color:#fff;border-radius:8px;padding:10px 16px;font-size:13px;
+    display:flex;align-items:center;gap:14px;box-shadow:0 8px 24px rgba(0,0,0,.3);
+  }
+  .toast button{background:none;border:none;color:#7FD4BC;font-weight:600;font-size:13px;}
+  .toast button:hover{text-decoration:underline;}
+
+  /* ---------- Mobile ---------- */
+  @media (max-width:760px){
+    .summary{grid-template-columns:repeat(2,1fr);}
+    .task-grid-head{display:none;}
+    .task-row{
+      display:block;padding:12px 16px;
+    }
+    .task-row > div{margin-bottom:8px;}
+    .task-row > div:last-child{margin-bottom:0;}
+    .cell-label{display:block;}
+    .tnum{font-weight:600;color:var(--text);}
+    .row-menu-wrap{justify-self:start;}
+    .topbar{padding:10px 14px;}
+    .wrap{padding:14px 12px 80px;}
+  }
+
+  /* ---------- Print / PDF-ready view ---------- */
+  @media print{
+    body{background:#fff;font-size:12px;}
+    .topbar .btn,.gear-wrap,.filters,.dots-btn,.add-task-btn,.ws-foot,
+    .ws-head .chev,.toast-wrap,.overlay{display:none !important;}
+    .topbar{position:static;border-bottom:2px solid var(--teal);}
+    .ws.collapsed .ws-body{display:block !important;}
+    .ws,.stat,.filters{border-color:#bbb;box-shadow:none;}
+    .ws{break-inside:avoid;page-break-inside:avoid;}
+    .editable:hover{background:none;outline:none;}
+    .editable:empty::before{content:"";}
+    .badge{border:1px solid #999;}
+    .wrap{max-width:none;padding:0 4px;}
+    .ws-head{cursor:default;}
+  }
+  body.print-preview .topbar .btn,
+  body.print-preview .gear-wrap,
+  body.print-preview .filters,
+  body.print-preview .dots-btn,
+  body.print-preview .add-task-btn,
+  body.print-preview .ws-foot{display:none !important;}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <span class="logo">SMF</span>
+  <div class="titleblock">
+    <h1>Service Delivery Mobilisation Tracker</h1>
+    <div class="updated" id="lastUpdated">Last updated: —</div>
+  </div>
+  <span class="spacer"></span>
+  <button class="btn" id="btnShareLink" title="Copy a link that carries all current data">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6.5 9.5 9.5 6.5M5 11l-1.5 1.5a2.5 2.5 0 0 1-3.5-3.5L2.5 7M11 5l1.5-1.5a2.5 2.5 0 0 1 3.5 3.5L13.5 9" transform="scale(.9) translate(.5 .5)"/></svg>
+    Copy share link
+  </button>
+  <button class="btn" id="btnExport">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2v8M5 7l3 3 3-3M2.5 12.5v1a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-1"/></svg>
+    Export JSON
+  </button>
+  <button class="btn" id="btnImport">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 10V2M5 5l3-3 3 3M2.5 12.5v1a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-1"/></svg>
+    Import JSON
+  </button>
+  <button class="btn" id="btnPrint">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6V2.5h8V6M4 11H2.5V6.5h11V11H12M4 9.5h8v4H4z"/></svg>
+    Print view
+  </button>
+  <div class="gear-wrap">
+    <button class="btn" id="btnGear" title="Settings" aria-label="Settings">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.8v1.7M8 12.5v1.7M1.8 8h1.7M12.5 8h1.7M3.6 3.6l1.2 1.2M11.2 11.2l1.2 1.2M12.4 3.6l-1.2 1.2M4.8 11.2l-1.2 1.2"/></svg>
+    </button>
+    <div class="gear-menu" id="gearMenu">
+      <button id="btnReset" class="danger">Reset to original task list</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="summary" id="summary"></section>
+
+  <section class="filters">
+    <label for="fWs">Workstream</label>
+    <select id="fWs"></select>
+    <label for="fStatus">Status</label>
+    <select id="fStatus"></select>
+    <label for="fOwner">Owner</label>
+    <select id="fOwner"></select>
+    <button class="clear-filters" id="btnClearFilters">Clear filters</button>
+  </section>
+
+  <section id="workstreams"></section>
+
+  <section class="ws" id="raciPanel">
+    <div class="ws-head" id="raciHead">
+      <svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+      <h2>Who does what</h2>
+      <span class="ws-count">built automatically from the task list</span>
+    </div>
+    <div class="ws-body">
+      <div class="raci-table-wrap" id="raciTableWrap"></div>
+      <div class="raci-note">
+        <strong style="color:var(--teal)">Doing it</strong> = does the work &nbsp;•&nbsp;
+        <strong style="color:var(--blue-badge-text)">Signs off</strong> = approves it is done &nbsp;•&nbsp;
+        <span>Gets update = kept in the loop</span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Export modal -->
+<div class="overlay" id="exportOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3>Export — share this data</h3><button class="modal-close" data-close="exportOverlay">×</button></div>
+    <div class="modal-body">
+      <p class="hint">Copy everything below and send it to a colleague (WhatsApp / email). They open this same file on their device, click <strong>Import JSON</strong>, and paste it in.</p>
+      <textarea id="exportText" readonly></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="btnDownloadJson">Download .json file</button>
+      <button class="btn btn-primary" id="btnCopyExport">Copy to clipboard</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import modal -->
+<div class="overlay" id="importOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3>Import shared data</h3><button class="modal-close" data-close="importOverlay">×</button></div>
+    <div class="modal-body">
+      <p class="hint">Paste the JSON a colleague exported, <em>or</em> paste a share link in the second box. <strong>This replaces everything currently on this device.</strong></p>
+      <div class="field-row">
+        <label>Paste exported JSON</label>
+        <textarea id="importText" placeholder='{"tasks": [...]}'></textarea>
+      </div>
+      <div class="field-row">
+        <label>…or paste a share link</label>
+        <input type="text" id="importLink" placeholder="https://…#data=…">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-close="importOverlay">Cancel</button>
+      <button class="btn btn-primary" id="btnDoImport">Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit task modal -->
+<div class="overlay" id="editOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3 id="editModalTitle">Edit task</h3><button class="modal-close" data-close="editOverlay">×</button></div>
+    <div class="modal-body">
+      <div class="field-row"><label>Task</label><textarea id="emName"></textarea></div>
+      <div class="field-row"><label>Owner (doing it)</label><input type="text" id="emOwner"></div>
+      <div class="field-row"><label>Signs off</label><input type="text" id="emSignoff"></div>
+      <div class="field-row"><label>Gets an update</label><input type="text" id="emInformed"></div>
+      <div class="field-row"><label>Due</label><input type="text" id="emDue" placeholder="e.g. Before POC start / 20 Jun"></div>
+      <div class="field-row"><label>Status</label><select id="emStatus"></select></div>
+      <div class="field-row"><label>Notes</label><textarea id="emNotes"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-close="editOverlay">Cancel</button>
+      <button class="btn btn-primary" id="btnSaveEdit">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+(function(){
+"use strict";
+
+var LS_KEY = "smf_sd_tracker_v1";
+
+var STATUSES = [
+  { key:"not_started", label:"Not started yet" },
+  { key:"working",     label:"Working on it" },
+  { key:"stuck",       label:"Stuck — needs help" },
+  { key:"done",        label:"Done" }
+];
+function statusLabel(k){ for(var i=0;i<STATUSES.length;i++){ if(STATUSES[i].key===k) return STATUSES[i].label; } return k; }
+
+var STATUS_ICONS = {
+  not_started: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="5.5"/></svg>',
+  working:     '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M12 1.8v2.7H9.3"/></svg>',
+  stuck:       '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2.2 14.6 13H1.4L8 2.2z" stroke-linejoin="round"/><path d="M8 6.5v3"/><circle cx="8" cy="11.4" r="0.4" fill="currentColor"/></svg>',
+  done:        '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3.2 3L13 4.5"/></svg>'
+};
+
+var WORKSTREAMS = [
+  { id:1, name:"HR & Team Formalisation" },
+  { id:2, name:"SOP & Training Manual" },
+  { id:3, name:"POC (Proof of Concept) Setup" },
+  { id:4, name:"Process Readiness & Workflow Alignment" },
+  { id:5, name:"Communication & Governance" }
+];
+
+var STAKEHOLDERS = [
+  { name:"Nikthesh",                              re:/nikthesh/i },
+  { name:"Mr. Alex",                              re:/\balex\b/i },
+  { name:"Ms. Thirumamangai",                     re:/thirumamangai/i },
+  { name:"HR Team (Mrs. Amudha / Mrs. Anuradha)", re:/\bhr\b|amudha|anuradha/i },
+  { name:"Dr. Sindhuja",                          re:/sindhuja/i },
+  { name:"Ms. Vamci (T&D)",                       re:/vamci/i },
+  { name:"Ms. Sandhya (OP SD TL)",                re:/sandhya|op sd tl/i },
+  { name:"Ms. Chitra (IP SD TL)",                 re:/chitra|ip sd tl/i },
+  { name:"Director / Dr. Arjun Rangarajan",       re:/director|arjun/i },
+  { name:"IT",                                    re:/\bIT\b/ },
+  { name:"Marketing",                             re:/marketing/i },
+  { name:"JMT / HODs",                            re:/\bjmt\b|\bhods?\b/i }
+];
+
+function seedTasks(){
+  var t = [
+    // Workstream 1 — HR & Team Formalisation
+    [1,"1.1","Confirm and freeze OP SD team composition at Mogappair (1 TL Ms. Sandhya + 2 IVRS Executives + Care Coordinator + CC Intern)","Mrs. Amudha / Mrs. Anuradha (HR)","Director","Dr. Sindhuja, Mr. Alex, Nikthesh","Earliest possible","3 IVRS agents redeployed from OP PR. No new hire."],
+    [1,"1.2","Confirm and freeze IP SD team composition at Anna Nagar (1 TL Ms. Chitra + 1 IVRS Executive + 1 IP PR executive)","Mrs. Amudha / Mrs. Anuradha (HR)","Director","Dr. Sindhuja, Mr. Alex, Nikthesh","Earliest possible","IP PR executive freed from feedback duty."],
+    [1,"1.3","Issue formal role-alignment letters / internal deployment orders for all redeployed staff","HR Team","Director","All team leads","After freeze","Covers IVRS → SD, CC → SD, IP PR → SD transitions."],
+    [1,"1.4","Confirm reporting structure for OP SD Team (TL reports to Ms. Thirumamangai, Project Head)","HR Team","Ms. Thirumamangai","Dr. Sindhuja, Mr. Alex","After role letters","Governance: Dr. Arjun Rangarajan chairs project."],
+    [1,"1.5","Confirm reporting structure for IP SD Team (same governance)","HR Team","Ms. Thirumamangai","Dr. Sindhuja, Mr. Alex","After role letters",""],
+    [1,"1.6","Complete handover briefings from IVRS team to redeployed executives","Mr. Alex + Team Leads","Ms. Thirumamangai","HR, Nikthesh","Before POC start","Ensure no disruption to remaining 6 IVRS agents (64.5% utilisation)."],
+    // Workstream 2 — SOP & Training Manual
+    [2,"2.1","Share approved SOP and Training Manual with all stakeholders","Mr. Alex","Ms. Thirumamangai","HR, Dr. Sindhuja, Nikthesh, Team Leads","Immediately (director's request)","Director has explicitly asked Mr. Alex to share this at the earliest."],
+    [2,"2.2","Confirm SOP covers: feedback collection, complaint view-only protocol for SD, RCA/CAPA documentation, Google review guidance, wow moments","Mr. Alex","Dr. Sindhuja","Nikthesh","On share",""],
+    [2,"2.3","Confirm Training Manual covers SterloCare module navigation for SD Executives","Mr. Alex + Ms. Vamci (T&D)","Ms. Thirumamangai","HR, Nikthesh","On share","SterloCare = complaint & feedback platform."],
+    [2,"2.4","Commence formal training program for SD Executives (OP + IP) per approved SOP","Mr. Alex + Ms. Vamci","Ms. Thirumamangai","Dr. Sindhuja, Nikthesh","After manpower freeze","Training to run in parallel with POC setup."],
+    [2,"2.5","Train IP Telephone Operator (TO) team on SterloCare modules (Phase 2 readiness)","Mr. Alex + Ms. Vamci","Ms. Thirumamangai","IP TL Ms. Chitra","During POC period","TO team: 6 agents, currently 7.4% utilisation. Phase 2 role: night-hour SD support."],
+    // Workstream 3 — POC Setup
+    [3,"3.1","Initiate POC process — define scope, timelines, and success metrics","Nikthesh","Ms. Thirumamangai","Mr. Alex, Dr. Sindhuja, HR","As soon as manpower confirmed","Director has asked Nikthesh to lead POC and share regular updates."],
+    [3,"3.2","Configure SterloCare complaint module for OP (Mogappair) — PR as owner, SD as view-only","Nikthesh + Mr. Alex (Sterlo vendor)","Ms. Thirumamangai","OP PR Section Head, OP SD TL","Before POC go-live","TAT 1 = 15 min acknowledgement. TAT 2 & 3 to be defined by JMT at operationalisation."],
+    [3,"3.3","Configure SterloCare feedback module for OP SD Team — target 75 feedback/day","Nikthesh + Mr. Alex","Ms. Thirumamangai","OP SD TL Ms. Sandhya","Before POC go-live","NPS QR + tablet at OP counters. 0–5 scores trigger WhatsApp follow-up."],
+    [3,"3.4","Configure SterloCare feedback module for IP SD Team — target 28 feedback/day (discharge day)","Nikthesh + Mr. Alex","Ms. Thirumamangai","IP SD TL Ms. Chitra","Before POC go-live","Face-to-face collection at bedside on discharge day."],
+    [3,"3.5","Set up Director-level live dashboard access on SterloCare","Nikthesh + Sterlo vendor","Ms. Thirumamangai","Director, Dr. Arjun Rangarajan","Before go-live","Directors must see all modules for both campuses in real time."],
+    [3,"3.6","Configure automated weekly report dispatch from SterloCare to Director","Nikthesh + Sterlo vendor","Ms. Thirumamangai","Director","Before go-live","Covers complaints, TAT compliance, feedback scores, Google review trends."],
+    [3,"3.7","Install QR codes + tablets at OP counters (Mogappair)","Nikthesh + IT","Mr. Alex","OP SD TL","Before POC start",""],
+    [3,"3.8","Install bedside QR + tablets at IP wards (Anna Nagar)","Nikthesh + IT","Mr. Alex","IP SD TL","Before POC start",""],
+    [3,"3.9","Define Closing TAT and HOD Resolution TAT for all 14 departments (currently undecided)","Nikthesh (facilitates)","JMT + HODs","All stakeholders","At operationalisation","Acknowledgement TAT is fixed at 15 min. These two are pending JMT decision."],
+    // Workstream 4 — Process Readiness & Workflow Alignment
+    [4,"4.1","Brief OP PR Section Head and HOD on new complaint workflow (SD is view-only; PR owns closure)","Mr. Alex + Nikthesh","Ms. Thirumamangai","OP PR team","Before POC","PR Section Head facilitates; cannot close complaints. SD cannot close complaints in OP."],
+    [4,"4.2","Brief IP PR team on restored core PR function (feedback duty removed; Level A escalation role formalised)","Mr. Alex + Nikthesh","Ms. Thirumamangai","IP PR team, IP SD TL","Before POC","IP PR now freed for full-time complaint management."],
+    [4,"4.3","Brief all 14 Department Section Heads on complaint acknowledgement responsibility (15-min TAT)","Ms. Thirumamangai + Mr. Alex","Director","HODs","Before go-live","Section Heads are the only complaint closure authority."],
+    [4,"4.4","Brief all 14 Department HODs on escalation protocol (TAT 2 breach → HOD notified; TAT 3 breach → Director notified)","Ms. Thirumamangai","Director","All Section Heads","Before go-live",""],
+    [4,"4.5","Define wow moments documentation format and monthly review process","Mr. Alex + SD TLs","Ms. Thirumamangai","Dr. Sindhuja, Nikthesh","During training","Wow moments to be documented, reviewed monthly, shared as best practice."],
+    [4,"4.6","Define RCA/CAPA documentation template for SD Executives","Mr. Alex + Dr. Sindhuja","Ms. Thirumamangai","SD TLs, Nikthesh","During training","SD own RCA/CAPA for feedback; PR Section Head reviews."],
+    [4,"4.7","Confirm Google review ethical guidance process and training for SD Executives","Mr. Alex + Marketing","Ms. Thirumamangai","SD TLs","During training","Marketing team to support; no incentivised reviews."],
+    // Workstream 5 — Communication & Governance
+    [5,"5.1","Share daily status update on shared Excel sheet (activities, pending actions, support needed, timelines)","Nikthesh","Ms. Thirumamangai","Director, Mr. Alex, HR, Dr. Sindhuja","Daily from today","Director has explicitly asked Nikthesh to maintain this."],
+    [5,"5.2","Share RACI matrix (who does what across all workstreams) with all stakeholders","Nikthesh","Ms. Thirumamangai","All project stakeholders","By end of tomorrow","Director's explicit ask: \"share daily updates with RACI matrix by end of tomorrow.\""],
+    [5,"5.3","Share regular POC progress updates with all stakeholders","Nikthesh","Ms. Thirumamangai","Director, Mr. Alex, HR, Dr. Sindhuja","Weekly during POC",""],
+    [5,"5.4","Conduct implementation readiness check across OP SD + IP SD + IT + PR + HR before go-live","Nikthesh + Mr. Alex","Ms. Thirumamangai","Director","Before go-live",""]
+  ];
+  return t.map(function(r,i){
+    return { id:i+1, ws:r[0], num:r[1], name:r[2], owner:r[3], signoff:r[4], informed:r[5], due:r[6], status:"not_started", notes:r[7], deleted:false };
+  });
+}
+
+function freshState(){
+  var tasks = seedTasks();
+  return {
+    tasks: tasks,
+    nextId: tasks.length + 1,
+    lastUpdated: Date.now(),
+    filters: { ws:"all", status:"all", owner:"all" },
+    collapsed: {},
+    raciCollapsed: false
+  };
+}
+
+var state;
+function load(){
+  try{
+    var raw = localStorage.getItem(LS_KEY);
+    if(raw){
+      var s = JSON.parse(raw);
+      if(s && Array.isArray(s.tasks)){
+        var d = freshState();
+        for(var k in d){ if(!(k in s)) s[k] = d[k]; }
+        if(!s.filters) s.filters = { ws:"all", status:"all", owner:"all" };
+        state = s;
+        return;
+      }
+    }
+  }catch(e){ /* corrupted storage — fall back to seed */ }
+  state = freshState();
+  persist(false);
+}
+function persist(touch){
+  if(touch !== false) state.lastUpdated = Date.now();
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){ /* storage full or blocked */ }
+  renderTimestamp();
+}
+
+/* ---------- helpers ---------- */
+function $(id){ return document.getElementById(id); }
+function esc(s){
+  return String(s == null ? "" : s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+function liveTasks(){ return state.tasks.filter(function(t){ return !t.deleted; }); }
+function findTask(id){
+  for(var i=0;i<state.tasks.length;i++){ if(state.tasks[i].id===id) return state.tasks[i]; }
+  return null;
+}
+function renderTimestamp(){
+  var d = new Date(state.lastUpdated);
+  $("lastUpdated").textContent = "Last updated: " + d.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}) + ", " + d.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"});
+}
+
+/* ---------- toast ---------- */
+function toast(msg, undoLabel, onUndo, ms){
+  var el = document.createElement("div");
+  el.className = "toast";
+  var span = document.createElement("span");
+  span.textContent = msg;
+  el.appendChild(span);
+  var timer;
+  if(undoLabel){
+    var b = document.createElement("button");
+    b.textContent = undoLabel;
+    b.onclick = function(){ clearTimeout(timer); el.remove(); onUndo(); };
+    el.appendChild(b);
+  }
+  $("toastWrap").appendChild(el);
+  timer = setTimeout(function(){ el.remove(); }, ms || 3000);
+}
+
+/* ---------- summary ---------- */
+function renderSummary(){
+  var counts = { total:0, done:0, working:0, stuck:0, not_started:0 };
+  liveTasks().forEach(function(t){ counts.total++; counts[t.status] = (counts[t.status]||0)+1; });
+  $("summary").innerHTML =
+    '<div class="stat total"><div class="num">'+counts.total+'</div><div class="lbl">Total tasks</div></div>'+
+    '<div class="stat done"><div class="num">'+counts.done+'</div><div class="lbl">Done</div></div>'+
+    '<div class="stat working"><div class="num">'+counts.working+'</div><div class="lbl">Working on it</div></div>'+
+    '<div class="stat stuck"><div class="num">'+counts.stuck+'</div><div class="lbl">Stuck — needs help</div></div>'+
+    '<div class="stat notstarted"><div class="num">'+counts.not_started+'</div><div class="lbl">Not started yet</div></div>';
+}
+
+/* ---------- filters ---------- */
+function ownerOptions(){
+  var opts = [], seen = {};
+  STAKEHOLDERS.forEach(function(st){
+    var hit = liveTasks().some(function(t){ return st.re.test(t.owner||""); });
+    if(hit){ opts.push({ value:"st:"+st.name, label:st.name }); seen[st.name]=true; }
+  });
+  liveTasks().forEach(function(t){
+    var o = (t.owner||"").trim();
+    if(!o) return;
+    var matched = STAKEHOLDERS.some(function(st){ return st.re.test(o); });
+    if(!matched && !seen[o]){ seen[o]=true; opts.push({ value:"raw:"+o, label:o }); }
+  });
+  return opts;
+}
+function renderFilters(){
+  var f = state.filters;
+  var wsSel = '<option value="all">All workstreams</option>';
+  WORKSTREAMS.forEach(function(w){
+    wsSel += '<option value="'+w.id+'"'+(String(f.ws)===String(w.id)?" selected":"")+'>'+w.id+' — '+esc(w.name)+'</option>';
+  });
+  $("fWs").innerHTML = wsSel;
+
+  var stSel = '<option value="all">All statuses</option>';
+  STATUSES.forEach(function(s){
+    stSel += '<option value="'+s.key+'"'+(f.status===s.key?" selected":"")+'>'+esc(s.label)+'</option>';
+  });
+  $("fStatus").innerHTML = stSel;
+
+  var owSel = '<option value="all">All owners</option>';
+  ownerOptions().forEach(function(o){
+    owSel += '<option value="'+esc(o.value)+'"'+(f.owner===o.value?" selected":"")+'>'+esc(o.label)+'</option>';
+  });
+  $("fOwner").innerHTML = owSel;
+}
+function taskPassesFilter(t){
+  var f = state.filters;
+  if(f.ws !== "all" && String(t.ws) !== String(f.ws)) return false;
+  if(f.status !== "all" && t.status !== f.status) return false;
+  if(f.owner !== "all"){
+    if(f.owner.indexOf("st:")===0){
+      var name = f.owner.slice(3), st = null;
+      for(var i=0;i<STAKEHOLDERS.length;i++){ if(STAKEHOLDERS[i].name===name){ st=STAKEHOLDERS[i]; break; } }
+      if(!st || !st.re.test(t.owner||"")) return false;
+    }else if(f.owner.indexOf("raw:")===0){
+      if((t.owner||"").trim() !== f.owner.slice(4)) return false;
+    }
+  }
+  return true;
+}
+
+/* ---------- workstream panels ---------- */
+function statusBadge(t){
+  return '<span class="badge '+t.status+'" data-act="status" data-id="'+t.id+'" title="Click to change status">'+
+    STATUS_ICONS[t.status] + esc(statusLabel(t.status)) + '</span>';
+}
+function editableCell(t, field, cls){
+  return '<span class="editable '+(cls||"")+'" data-act="edit" data-id="'+t.id+'" data-field="'+field+'">'+esc(t[field]||"")+'</span>';
+}
+function renderWorkstreams(){
+  var html = "";
+  WORKSTREAMS.forEach(function(w){
+    var all = liveTasks().filter(function(t){ return t.ws===w.id; });
+    var shown = all.filter(taskPassesFilter);
+    var doneCount = all.filter(function(t){ return t.status==="done"; }).length;
+    var collapsed = !!state.collapsed[w.id];
+    html += '<div class="ws'+(collapsed?" collapsed":"")+'" data-ws="'+w.id+'">';
+    html += '<div class="ws-head" data-act="toggle-ws" data-ws="'+w.id+'">'+
+      '<svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>'+
+      '<h2>Workstream '+w.id+' — '+esc(w.name)+'</h2>'+
+      '<span class="ws-count">'+doneCount+' of '+all.length+' done</span></div>';
+    html += '<div class="ws-body">';
+    if(shown.length){
+      html += '<div class="task-grid-head"><div>#</div><div>Task</div><div>Owner</div><div>Status</div><div>Due</div><div>Notes</div><div></div></div>';
+      shown.forEach(function(t){
+        html += '<div class="task-row" data-id="'+t.id+'">'+
+          '<div class="tnum">'+esc(t.num)+'</div>'+
+          '<div class="tname'+(t.status==="done"?" done-task":"")+'"><span class="cell-label">Task</span>'+editableCell(t,"name")+'</div>'+
+          '<div class="towner"><span class="cell-label">Owner</span>'+editableCell(t,"owner")+'</div>'+
+          '<div class="tstatus"><span class="cell-label">Status</span>'+statusBadge(t)+'</div>'+
+          '<div class="tdue"><span class="cell-label">Due</span>'+editableCell(t,"due")+'</div>'+
+          '<div class="tnotes"><span class="cell-label">Notes</span>'+editableCell(t,"notes")+'</div>'+
+          '<div class="row-menu-wrap">'+
+            '<button class="dots-btn" data-act="row-menu" data-id="'+t.id+'" aria-label="Task menu">···</button>'+
+            '<div class="row-menu" id="rowmenu-'+t.id+'">'+
+              '<button data-act="edit-modal" data-id="'+t.id+'">Edit all details…</button>'+
+              '<button class="danger" data-act="delete" data-id="'+t.id+'">Delete task</button>'+
+            '</div>'+
+          '</div>'+
+        '</div>';
+      });
+    }else{
+      html += '<div class="empty-msg">'+(all.length? "No tasks match the current filters." : "No tasks yet — add one below.")+'</div>';
+    }
+    html += '<div class="ws-foot"><button class="add-task-btn" data-act="add-task" data-ws="'+w.id+'">+ Add a task to this workstream</button></div>';
+    html += '</div></div>';
+  });
+  $("workstreams").innerHTML = html;
+}
+
+/* ---------- Who does what ---------- */
+function renderRaci(){
+  var panel = $("raciPanel");
+  panel.classList.toggle("collapsed", !!state.raciCollapsed);
+  var map = {};
+  STAKEHOLDERS.forEach(function(st){ map[st.name]={}; });
+  liveTasks().forEach(function(t){
+    STAKEHOLDERS.forEach(function(st){
+      var cell = map[st.name][t.ws] = map[st.name][t.ws] || {};
+      if(st.re.test(t.owner||""))    cell.doing = true;
+      if(st.re.test(t.signoff||""))  cell.signs = true;
+      if(st.re.test(t.informed||"")) cell.gets  = true;
+    });
+  });
+  var html = '<table class="raci"><thead><tr><th>Person / team</th>';
+  WORKSTREAMS.forEach(function(w){ html += '<th>WS '+w.id+'<br><span style="font-weight:400;font-size:11px">'+esc(w.name)+'</span></th>'; });
+  html += '</tr></thead><tbody>';
+  STAKEHOLDERS.forEach(function(st){
+    var any = false;
+    var row = '<tr><th>'+esc(st.name)+'</th>';
+    WORKSTREAMS.forEach(function(w){
+      var c = map[st.name][w.id] || {};
+      var parts = [];
+      if(c.doing) parts.push('<span class="role doing">Doing it</span>');
+      if(c.signs) parts.push('<span class="role signs">Signs off</span>');
+      if(c.gets)  parts.push('<span class="role gets">Gets update</span>');
+      if(parts.length){ any = true; row += '<td>'+parts.join("")+'</td>'; }
+      else row += '<td class="empty-cell">—</td>';
+    });
+    row += '</tr>';
+    if(any) html += row;
+  });
+  html += '</tbody></table>';
+  $("raciTableWrap").innerHTML = html;
+}
+
+function render(){
+  renderTimestamp();
+  renderSummary();
+  renderFilters();
+  renderWorkstreams();
+  renderRaci();
+  if(pendingEdit){
+    var pe = pendingEdit; pendingEdit = null;
+    var sel = '.editable[data-id="'+pe.id+'"][data-field="'+pe.field+'"]';
+    var el = document.querySelector(sel);
+    if(el) startInlineEdit(el);
+  }
+}
+
+/* ---------- inline editing ---------- */
+var EDIT_ORDER = ["name","owner","due","notes"];
+var pendingEdit = null;
+
+function startInlineEdit(span){
+  if(span.dataset.editing) return;
+  span.dataset.editing = "1";
+  var id = parseInt(span.dataset.id,10), field = span.dataset.field;
+  var t = findTask(id); if(!t) return;
+  var multiline = (field==="name" || field==="notes");
+  var input = document.createElement(multiline ? "textarea" : "input");
+  if(!multiline) input.type = "text";
+  input.className = "edit-input";
+  input.value = t[field] || "";
+  if(multiline) input.rows = Math.max(2, Math.ceil((t[field]||"").length/60));
+  span.style.display = "none";
+  span.parentNode.insertBefore(input, span.nextSibling);
+  input.focus();
+  input.setSelectionRange(input.value.length, input.value.length);
+
+  var finished = false;
+  function commit(nextField){
+    if(finished) return;
+    finished = true;
+    var v = input.value.trim();
+    if(v !== (t[field]||"")){ t[field] = v; persist(); }
+    if(nextField) pendingEdit = { id:id, field:nextField };
+    render();
+  }
+  input.addEventListener("blur", function(){ setTimeout(function(){ commit(null); }, 0); });
+  input.addEventListener("keydown", function(e){
+    if(e.key==="Enter" && !(multiline && e.shiftKey)){ e.preventDefault(); commit(null); }
+    else if(e.key==="Escape"){ finished = true; render(); }
+    else if(e.key==="Tab"){
+      e.preventDefault();
+      var idx = EDIT_ORDER.indexOf(field);
+      var next = e.shiftKey
+        ? EDIT_ORDER[(idx-1+EDIT_ORDER.length)%EDIT_ORDER.length]
+        : EDIT_ORDER[(idx+1)%EDIT_ORDER.length];
+      commit(next);
+    }
+  });
+}
+
+function startStatusEdit(badgeEl){
+  var id = parseInt(badgeEl.dataset.id,10);
+  var t = findTask(id); if(!t) return;
+  var sel = document.createElement("select");
+  sel.className = "status-select";
+  STATUSES.forEach(function(s){
+    var o = document.createElement("option");
+    o.value = s.key; o.textContent = s.label;
+    if(s.key===t.status) o.selected = true;
+    sel.appendChild(o);
+  });
+  badgeEl.style.display = "none";
+  badgeEl.parentNode.insertBefore(sel, badgeEl.nextSibling);
+  sel.focus();
+  function done(saveIt){
+    if(saveIt && sel.value !== t.status){ t.status = sel.value; persist(); }
+    render();
+  }
+  sel.addEventListener("change", function(){ done(true); });
+  sel.addEventListener("blur", function(){ setTimeout(function(){ done(true); }, 0); });
+  sel.addEventListener("keydown", function(e){ if(e.key==="Escape") done(false); });
+}
+
+/* ---------- add / delete / undo ---------- */
+function addTask(wsId){
+  var minor = 0;
+  state.tasks.forEach(function(t){
+    if(t.ws===wsId){
+      var m = /^\d+\.(\d+)$/.exec(t.num||"");
+      if(m) minor = Math.max(minor, parseInt(m[1],10));
+    }
+  });
+  var t = {
+    id: state.nextId++, ws: wsId, num: wsId + "." + (minor+1),
+    name: "New task", owner: "", signoff: "", informed: "",
+    due: "", status: "not_started", notes: "", deleted: false
+  };
+  state.tasks.push(t);
+  persist();
+  state.collapsed[wsId] = false;
+  pendingEdit = { id:t.id, field:"name" };
+  render();
+}
+function deleteTask(id){
+  var t = findTask(id); if(!t) return;
+  t.deleted = true;
+  persist();
+  render();
+  toast('Deleted "'+ (t.name.length>40 ? t.name.slice(0,40)+"…" : t.name) +'"', "Undo", function(){
+    t.deleted = false;
+    persist();
+    render();
+  }, 5000);
+  setTimeout(function(){
+    if(t.deleted){
+      state.tasks = state.tasks.filter(function(x){ return x.id !== id; });
+      persist(false);
+    }
+  }, 5200);
+}
+
+/* ---------- edit modal ---------- */
+var editModalTaskId = null;
+function openEditModal(id){
+  var t = findTask(id); if(!t) return;
+  editModalTaskId = id;
+  $("editModalTitle").textContent = "Edit task " + t.num;
+  $("emName").value = t.name||"";
+  $("emOwner").value = t.owner||"";
+  $("emSignoff").value = t.signoff||"";
+  $("emInformed").value = t.informed||"";
+  $("emDue").value = t.due||"";
+  $("emNotes").value = t.notes||"";
+  var sel = $("emStatus");
+  sel.innerHTML = "";
+  STATUSES.forEach(function(s){
+    var o = document.createElement("option");
+    o.value=s.key; o.textContent=s.label; if(s.key===t.status) o.selected=true;
+    sel.appendChild(o);
+  });
+  openOverlay("editOverlay");
+}
+$("btnSaveEdit").addEventListener("click", function(){
+  var t = findTask(editModalTaskId); if(!t){ closeOverlay("editOverlay"); return; }
+  t.name = $("emName").value.trim();
+  t.owner = $("emOwner").value.trim();
+  t.signoff = $("emSignoff").value.trim();
+  t.informed = $("emInformed").value.trim();
+  t.due = $("emDue").value.trim();
+  t.status = $("emStatus").value;
+  t.notes = $("emNotes").value.trim();
+  persist();
+  closeOverlay("editOverlay");
+  render();
+});
+
+/* ---------- overlays ---------- */
+function openOverlay(id){ $(id).classList.add("open"); }
+function closeOverlay(id){ $(id).classList.remove("open"); }
+document.querySelectorAll("[data-close]").forEach(function(b){
+  b.addEventListener("click", function(){ closeOverlay(b.dataset.close); });
+});
+document.querySelectorAll(".overlay").forEach(function(ov){
+  ov.addEventListener("mousedown", function(e){ if(e.target===ov) closeOverlay(ov.id); });
+});
+
+/* ---------- export / import / share ---------- */
+function exportPayload(){
+  return JSON.stringify({
+    app: "smf_sd_tracker", version: 1,
+    exportedAt: new Date().toISOString(),
+    nextId: state.nextId,
+    tasks: liveTasks()
+  }, null, 2);
+}
+$("btnExport").addEventListener("click", function(){
+  $("exportText").value = exportPayload();
+  openOverlay("exportOverlay");
+});
+$("btnCopyExport").addEventListener("click", function(){
+  copyText($("exportText").value, "Copied — paste it to your colleague.");
+});
+$("btnDownloadJson").addEventListener("click", function(){
+  var blob = new Blob([$("exportText").value], { type:"application/json" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "SMF_SD_Tracker_" + new Date().toISOString().slice(0,10) + ".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+});
+$("btnImport").addEventListener("click", function(){
+  $("importText").value = ""; $("importLink").value = "";
+  openOverlay("importOverlay");
+});
+$("btnDoImport").addEventListener("click", function(){
+  var raw = $("importText").value.trim();
+  var link = $("importLink").value.trim();
+  var data = null;
+  try{
+    if(raw){ data = JSON.parse(raw); }
+    else if(link){ data = decodeShareFragment(link); }
+  }catch(e){ data = null; }
+  if(!data || !Array.isArray(data.tasks)){
+    toast("That doesn't look like valid tracker data. Check what you pasted.", null, null, 4000);
+    return;
+  }
+  if(!confirm("Import this data? It will REPLACE everything currently saved on this device.")) return;
+  applyImport(data);
+  closeOverlay("importOverlay");
+  toast("Imported " + liveTasks().length + " tasks.", null, null, 3000);
+});
+function applyImport(data){
+  var maxId = 0;
+  var tasks = data.tasks.map(function(t){
+    var id = parseInt(t.id,10) || 0;
+    maxId = Math.max(maxId, id);
+    return {
+      id: id, ws: parseInt(t.ws,10) || 1, num: String(t.num||""),
+      name: String(t.name||""), owner: String(t.owner||""),
+      signoff: String(t.signoff||""), informed: String(t.informed||""),
+      due: String(t.due||""),
+      status: STATUSES.some(function(s){ return s.key===t.status; }) ? t.status : "not_started",
+      notes: String(t.notes||""), deleted: false
+    };
+  });
+  tasks.forEach(function(t,i){ if(!t.id) t.id = ++maxId; });
+  state.tasks = tasks;
+  state.nextId = Math.max(maxId+1, parseInt(data.nextId,10)||0, 1);
+  persist();
+  render();
+}
+
+function b64urlEncode(str){
+  return btoa(unescape(encodeURIComponent(str))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function b64urlDecode(str){
+  str = str.replace(/-/g,"+").replace(/_/g,"/");
+  while(str.length % 4) str += "=";
+  return decodeURIComponent(escape(atob(str)));
+}
+function shareLink(){
+  var payload = JSON.stringify({ app:"smf_sd_tracker", version:1, nextId:state.nextId, tasks:liveTasks() });
+  var base = location.href.split("#")[0];
+  return base + "#data=" + b64urlEncode(payload);
+}
+function decodeShareFragment(link){
+  var m = /#data=([A-Za-z0-9\-_]+)/.exec(link);
+  if(!m) return null;
+  return JSON.parse(b64urlDecode(m[1]));
+}
+$("btnShareLink").addEventListener("click", function(){
+  copyText(shareLink(), "Share link copied. Anyone who opens it gets this exact data.");
+});
+function copyText(text, okMsg){
+  function fallback(){
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); toast(okMsg, null, null, 3500); }
+    catch(e){ toast("Couldn't copy automatically — select and copy manually.", null, null, 4000); }
+    ta.remove();
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){ toast(okMsg, null, null, 3500); }, fallback);
+  }else fallback();
+}
+
+/* ---------- print ---------- */
+$("btnPrint").addEventListener("click", function(){
+  document.body.classList.add("print-preview");
+  window.print();
+});
+window.addEventListener("afterprint", function(){
+  document.body.classList.remove("print-preview");
+});
+
+/* ---------- settings / reset ---------- */
+$("btnGear").addEventListener("click", function(e){
+  e.stopPropagation();
+  $("gearMenu").classList.toggle("open");
+});
+$("btnReset").addEventListener("click", function(){
+  $("gearMenu").classList.remove("open");
+  if(!confirm("Reset the tracker?\n\nThis deletes ALL changes on this device and restores the original task list. This cannot be undone.")) return;
+  localStorage.removeItem(LS_KEY);
+  state = freshState();
+  persist(false);
+  render();
+  toast("Tracker reset to the original task list.", null, null, 3500);
+});
+
+/* ---------- filter events ---------- */
+$("fWs").addEventListener("change", function(){ state.filters.ws = this.value; persist(false); render(); });
+$("fStatus").addEventListener("change", function(){ state.filters.status = this.value; persist(false); render(); });
+$("fOwner").addEventListener("change", function(){ state.filters.owner = this.value; persist(false); render(); });
+$("btnClearFilters").addEventListener("click", function(){
+  state.filters = { ws:"all", status:"all", owner:"all" };
+  persist(false);
+  render();
+});
+
+/* ---------- delegated clicks ---------- */
+document.addEventListener("click", function(e){
+  // close any open menus when clicking elsewhere
+  if(!e.target.closest(".row-menu-wrap")){
+    document.querySelectorAll(".row-menu.open").forEach(function(m){ m.classList.remove("open"); });
+  }
+  if(!e.target.closest(".gear-wrap")) $("gearMenu").classList.remove("open");
+
+  var el = e.target.closest("[data-act]");
+  if(!el) return;
+  var act = el.dataset.act;
+  if(act==="toggle-ws"){
+    var w = parseInt(el.dataset.ws,10);
+    state.collapsed[w] = !state.collapsed[w];
+    persist(false);
+    render();
+  }else if(act==="edit"){
+    startInlineEdit(el);
+  }else if(act==="status"){
+    startStatusEdit(el);
+  }else if(act==="row-menu"){
+    e.stopPropagation();
+    var menu = $("rowmenu-"+el.dataset.id);
+    var wasOpen = menu.classList.contains("open");
+    document.querySelectorAll(".row-menu.open").forEach(function(m){ m.classList.remove("open"); });
+    if(!wasOpen) menu.classList.add("open");
+  }else if(act==="edit-modal"){
+    openEditModal(parseInt(el.dataset.id,10));
+  }else if(act==="delete"){
+    deleteTask(parseInt(el.dataset.id,10));
+  }else if(act==="add-task"){
+    addTask(parseInt(el.dataset.ws,10));
+  }
+});
+$("raciHead").addEventListener("click", function(){
+  state.raciCollapsed = !state.raciCollapsed;
+  persist(false);
+  render();
+});
+
+/* ---------- boot ---------- */
+load();
+// Share-link import: if opened via a #data= link, offer to load it.
+(function(){
+  if(location.hash && location.hash.indexOf("#data=")===0){
+    var data = null;
+    try{ data = decodeShareFragment(location.hash); }catch(e){}
+    history.replaceState(null, "", location.pathname + location.search);
+    if(data && Array.isArray(data.tasks)){
+      if(confirm("This link carries shared tracker data ("+data.tasks.length+" tasks).\n\nLoad it? It will replace the data saved on this device.")){
+        applyImport(data);
+      }
+    }
+  }
+})();
+render();
+
+})();
+</script>
+</body>
+</html>
