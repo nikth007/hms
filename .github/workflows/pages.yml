@@ -21,6 +21,7 @@ jobs:
         run: |
           mkdir site
           cp index.html SMF_SD_Mobilisation_Tracker.html site/
+          sed -i "s/__BUILD__/${GITHUB_SHA}/" site/SMF_SD_Mobilisation_Tracker.html
           cd site
           git init -b gh-pages
           git config user.name "github-actions[bot]"

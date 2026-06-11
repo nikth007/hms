@@ -786,15 +786,14 @@ var WS_COLORS = { 1:"#0F6E56", 2:"#1B5FAB", 3:"#7C3AED", 4:"#B45309", 5:"#BE185D
 
 /* Ordered by project hierarchy */
 var STAKEHOLDERS = [
-  { name:"Dr. Arjun Rangarajan — Director / JMT / Project Chairperson", re:/arjun|director|\bjmt\b/i },
+  { name:"Dr. Arjun Rangarajan — Project Chairperson", re:/arjun|director|\bjmt\b/i },
   { name:"Mr. Alex — Project Head",                    re:/\balex\b/i },
   { name:"Dr. Sindhuja — Project Advisor",             re:/sindhuja/i },
   { name:"Ms. Vamci — Project Advisor",                re:/vamci/i },
-  { name:"Ms. Thirumamangai (Mangai) — SD HOD",        re:/thirumamangai|mangai/i },
+  { name:"Ms. Thirumamangai (Mangai) — SD HOD",        re:/thirumamangai|mangai|\bhr\b/i },
   { name:"Nikthesh — Product Owner",                   re:/nikthesh/i },
   { name:"Mrs. Amudha — PR HOD (OP)",                  re:/amudha/i },
   { name:"Mrs. Anuradha — PR HOD (IP)",                re:/anuradha/i },
-  { name:"HR Team",                                    re:/\bhr\b/i },
   { name:"Ms. Sandhya — SD TL (OP)",                   re:/sandhya|op sd tl/i },
   { name:"Ms. Chitra — SD TL (IP)",                    re:/chitra|ip sd tl/i },
   { name:"Department HODs",                            re:/\bhods?\b/i }
@@ -2021,6 +2020,38 @@ window.addEventListener("storage", function(e){
 
 /* Refresh due-date RAG colours when a new day starts while the page is open */
 setInterval(function(){ if(!document.querySelector(".edit-input, .status-select")) render(); }, 10*60*1000);
+
+/* ---------- auto-update ----------
+   The deploy workflow stamps BUILD_ID with the commit SHA. Open pages poll
+   for a newer build (the unique query string skips the CDN cache) and reload
+   themselves, so changes pushed to the site reach every device without a
+   manual refresh. */
+var BUILD_ID = "__BUILD__";
+function checkForUpdate(){
+  if(location.protocol === "file:" || !/^[0-9a-f]{7,40}$/.test(BUILD_ID)) return;
+  fetch(location.pathname + "?upd=" + Date.now(), { cache:"no-store" })
+    .then(function(r){ return r.ok ? r.text() : ""; })
+    .then(function(html){
+      var m = new RegExp('var BUILD_ID = "([0-9a-f]{7,40})"').exec(html);
+      if(m && m[1] !== BUILD_ID) applyUpdate(m[1]);
+    })
+    .catch(function(){ /* offline — next interval will retry */ });
+}
+function applyUpdate(newBuild){
+  // Never reload mid-edit, and never twice for the same build — a stale CDN
+  // response served after the reload would otherwise loop forever.
+  if(document.querySelector(".edit-input, .status-select")){ setTimeout(checkForUpdate, 60000); return; }
+  var key = "smf_reloaded_" + newBuild;
+  try{
+    if(sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+  }catch(e){ return; }
+  toast("A newer version of the tracker is available — updating…", null, null, 2500);
+  setTimeout(function(){ location.reload(); }, 1200);
+}
+setTimeout(checkForUpdate, 4000);
+setInterval(checkForUpdate, 5*60*1000);
+document.addEventListener("visibilitychange", function(){ if(!document.hidden) checkForUpdate(); });
 
 /* ---------- boot ---------- */
 load();
