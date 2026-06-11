@@ -8,6 +8,7 @@
 <style>
   :root{
     --teal:#0F6E56;
+    --teal-bright:#16916F;
     --teal-soft:#E6F2EE;
     --gray-bg:#F7F8F9;
     --gray-border:#E3E6E8;
@@ -21,14 +22,26 @@
     --red-badge-text:#C04A1E;
     --green-badge:#E4F3EA;
     --green-badge-text:#1F7A43;
+    /* RAG palette */
+    --rag-red:#CC3E3E;
+    --rag-red-bg:#FCEAEA;
+    --rag-amber:#B45309;
+    --rag-amber-bg:#FCF1E0;
+    --rag-green:#1F7A43;
+    --rag-green-bg:#E4F3EA;
+    --shadow-sm:0 1px 2px rgba(16,24,40,.06);
+    --shadow-md:0 4px 14px rgba(16,24,40,.08);
+    /* workstream accents */
+    --ws1:#0F6E56; --ws2:#1B5FAB; --ws3:#7C3AED; --ws4:#B45309; --ws5:#BE185D;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    background:var(--gray-bg);
+    background:linear-gradient(180deg,#EFF6F3 0%,var(--gray-bg) 260px);
     color:var(--text);
     font-size:14px;
     line-height:1.45;
+    min-height:100vh;
   }
   button{font-family:inherit;font-size:13px;cursor:pointer;}
   select,input,textarea{font-family:inherit;font-size:13px;color:var(--text);}
@@ -36,29 +49,34 @@
   /* ---------- Top bar ---------- */
   .topbar{
     background:#fff;border-bottom:1px solid var(--gray-border);
+    border-top:3px solid var(--teal);
     padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-    position:sticky;top:0;z-index:50;
+    position:sticky;top:0;z-index:50;box-shadow:var(--shadow-sm);
   }
   .logo{
-    background:var(--teal);color:#fff;font-weight:700;letter-spacing:1px;
-    padding:6px 10px;border-radius:6px;font-size:15px;
+    background:linear-gradient(135deg,var(--teal) 0%,var(--teal-bright) 100%);
+    color:#fff;font-weight:700;letter-spacing:1px;
+    padding:7px 11px;border-radius:9px;font-size:15px;
+    box-shadow:0 2px 6px rgba(15,110,86,.3);
   }
-  .titleblock h1{font-size:17px;font-weight:600;}
+  .titleblock h1{font-size:17px;font-weight:650;}
   .titleblock .updated{font-size:11.5px;color:var(--text-soft);}
   .topbar .spacer{flex:1;}
   .btn{
-    background:#fff;border:1px solid var(--gray-border);border-radius:6px;
+    background:#fff;border:1px solid var(--gray-border);border-radius:8px;
     padding:7px 12px;color:var(--text);display:inline-flex;align-items:center;gap:6px;
+    transition:border-color .12s,color .12s,box-shadow .12s;
   }
-  .btn:hover{border-color:var(--teal);color:var(--teal);}
+  .btn:hover{border-color:var(--teal);color:var(--teal);box-shadow:var(--shadow-sm);}
   .btn-primary{background:var(--teal);border-color:var(--teal);color:#fff;}
   .btn-primary:hover{background:#0c5a46;color:#fff;}
   .btn svg{width:14px;height:14px;}
+  .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
   .gear-wrap{position:relative;}
   .gear-menu{
     display:none;position:absolute;right:0;top:calc(100% + 6px);background:#fff;
-    border:1px solid var(--gray-border);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.1);
-    min-width:200px;z-index:60;overflow:hidden;
+    border:1px solid var(--gray-border);border-radius:10px;box-shadow:var(--shadow-md);
+    min-width:210px;z-index:60;overflow:hidden;
   }
   .gear-menu.open{display:block;}
   .gear-menu button{
@@ -67,97 +85,6 @@
   }
   .gear-menu button:hover{background:var(--gray-bg);}
   .gear-menu .danger{color:#C04A1E;}
-
-  /* ---------- Layout ---------- */
-  .wrap{max-width:1240px;margin:0 auto;padding:18px 20px 80px;}
-
-  /* ---------- Summary strip ---------- */
-  .summary{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px;}
-  .stat{
-    background:#fff;border:1px solid var(--gray-border);border-radius:10px;
-    padding:12px 16px;
-  }
-  .stat .num{font-size:24px;font-weight:700;}
-  .stat .lbl{font-size:12px;color:var(--text-soft);margin-top:2px;}
-  .stat.total .num{color:var(--teal);}
-  .stat.done .num{color:var(--green-badge-text);}
-  .stat.working .num{color:var(--blue-badge-text);}
-  .stat.stuck .num{color:var(--red-badge-text);}
-  .stat.notstarted .num{color:var(--gray-badge-text);}
-
-  /* ---------- Filters ---------- */
-  .filters{
-    display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;
-    background:#fff;border:1px solid var(--gray-border);border-radius:10px;padding:10px 14px;
-  }
-  .filters label{font-size:12px;color:var(--text-soft);}
-  .filters select{
-    border:1px solid var(--gray-border);border-radius:6px;padding:6px 8px;background:#fff;
-    max-width:240px;
-  }
-  .filters .clear-filters{margin-left:auto;background:none;border:none;color:var(--teal);font-size:12px;}
-  .filters .clear-filters:hover{text-decoration:underline;}
-
-  /* ---------- Workstream panels ---------- */
-  .ws{
-    background:#fff;border:1px solid var(--gray-border);border-radius:10px;
-    margin-bottom:14px;overflow:hidden;
-  }
-  .ws-head{
-    display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;
-    user-select:none;background:#fff;
-  }
-  .ws-head:hover{background:#FBFCFC;}
-  .ws-head .chev{transition:transform .15s;color:var(--text-soft);flex-shrink:0;}
-  .ws.collapsed .ws-head .chev{transform:rotate(-90deg);}
-  .ws-head h2{font-size:14.5px;font-weight:600;flex:1;}
-  .ws-head .ws-count{font-size:12px;color:var(--text-soft);}
-  .ws-body{border-top:1px solid var(--gray-border);overflow-x:auto;}
-  .ws.collapsed .ws-body{display:none;}
-
-  .task-grid-head,.task-row{
-    display:grid;
-    grid-template-columns:44px minmax(180px,1.5fr) 120px 110px 110px 120px 130px 95px minmax(140px,1fr) 30px;
-    gap:8px;align-items:start;padding:9px 16px;
-    min-width:1120px;
-  }
-  .task-grid-head{
-    font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-soft);
-    border-bottom:1px solid var(--gray-border);background:#FBFCFC;padding-top:7px;padding-bottom:7px;
-  }
-  .task-row{border-bottom:1px solid #F0F2F3;}
-  .task-row:last-child{border-bottom:none;}
-  .task-row:hover{background:#FBFCFC;}
-  .tnum{color:var(--text-soft);font-variant-numeric:tabular-nums;padding-top:2px;}
-  .cell-label{display:none;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-soft);margin-bottom:2px;}
-
-  .editable{border-radius:5px;padding:2px 5px;margin:-2px -5px;min-height:1.4em;cursor:text;}
-  .editable:hover{background:var(--teal-soft);outline:1px dashed rgba(15,110,86,.35);}
-  .editable:empty::before{content:"—";color:#B7BEC4;}
-  .edit-input{
-    width:100%;border:1px solid var(--teal);border-radius:5px;padding:3px 5px;
-    font-size:13px;background:#fff;outline:none;resize:vertical;
-  }
-  .tname.done-task .editable{text-decoration:line-through;color:var(--text-soft);}
-  .tnotes .editable{color:var(--text-soft);font-size:12.5px;}
-  .tdue .editable{font-size:12.5px;}
-  .editable.people{font-size:12.5px;color:var(--text-soft);}
-  .towner .editable{color:var(--text);}
-
-  /* ---------- Help banner (plain-language RACI guide) ---------- */
-  .help-banner{
-    background:var(--teal-soft);border:1px solid #BFDDD3;border-radius:10px;
-    padding:14px 16px;margin-bottom:16px;font-size:13px;
-    display:flex;gap:14px;align-items:flex-start;
-  }
-  .help-banner[hidden]{display:none;}
-  .help-banner ul{margin:8px 0 8px 18px;}
-  .help-banner li{margin-bottom:4px;}
-  .help-banner .dismiss{
-    background:var(--teal);border:none;color:#fff;border-radius:6px;
-    padding:7px 14px;flex-shrink:0;
-  }
-  .help-banner .dismiss:hover{background:#0c5a46;}
 
   /* ---------- Sync status pill ---------- */
   .sync-pill{
@@ -174,6 +101,150 @@
   .setup-steps li{margin-bottom:6px;}
   .setup-steps code{background:var(--gray-badge);padding:1px 5px;border-radius:4px;font-size:11.5px;}
 
+  /* ---------- Layout & tabs ---------- */
+  .wrap{max-width:1240px;margin:0 auto;padding:16px 20px 80px;}
+  .tabbar{display:flex;justify-content:center;margin-bottom:18px;}
+  .viewtabs{display:flex;gap:4px;background:#E5EBE9;padding:4px;border-radius:12px;box-shadow:inset 0 1px 2px rgba(0,0,0,.04);}
+  .viewtabs button{
+    border:none;background:transparent;padding:8px 20px;border-radius:9px;
+    font-weight:600;color:var(--text-soft);font-size:13.5px;transition:all .15s;
+  }
+  .viewtabs button.active{background:#fff;color:var(--teal);box-shadow:0 1px 4px rgba(0,0,0,.12);}
+
+  /* ---------- Summary strip ---------- */
+  .summary{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px;}
+  .stat{
+    background:#fff;border:1px solid var(--gray-border);border-radius:12px;
+    padding:12px 16px;box-shadow:var(--shadow-sm);border-left-width:4px;
+    transition:transform .12s,box-shadow .12s;
+  }
+  .stat:hover{transform:translateY(-1px);box-shadow:var(--shadow-md);}
+  .stat .num{font-size:24px;font-weight:700;}
+  .stat .lbl{font-size:12px;color:var(--text-soft);margin-top:2px;}
+  .stat.total{border-left-color:var(--teal);}        .stat.total .num{color:var(--teal);}
+  .stat.done{border-left-color:var(--rag-green);}    .stat.done .num{color:var(--rag-green);}
+  .stat.working{border-left-color:#1B5FAB;}          .stat.working .num{color:var(--blue-badge-text);}
+  .stat.stuck{border-left-color:var(--rag-red);}     .stat.stuck .num{color:var(--rag-red);}
+  .stat.notstarted{border-left-color:#9AA3AA;}       .stat.notstarted .num{color:var(--gray-badge-text);}
+
+  /* ---------- Filters ---------- */
+  .filters{
+    display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;
+    background:#fff;border:1px solid var(--gray-border);border-radius:12px;padding:10px 14px;
+    box-shadow:var(--shadow-sm);
+  }
+  .filters label{font-size:12px;color:var(--text-soft);}
+  .filters select{
+    border:1px solid var(--gray-border);border-radius:7px;padding:6px 8px;background:#fff;
+    max-width:240px;
+  }
+  .filters .clear-filters{margin-left:auto;background:none;border:none;color:var(--teal);font-size:12px;}
+  .filters .clear-filters:hover{text-decoration:underline;}
+
+  /* ---------- Help banner & legend strip ---------- */
+  .help-banner{
+    background:linear-gradient(135deg,#E6F2EE 0%,#EDF6F2 100%);
+    border:1px solid #BFDDD3;border-radius:12px;
+    padding:14px 16px;margin-bottom:14px;font-size:13px;
+    display:flex;gap:14px;align-items:flex-start;box-shadow:var(--shadow-sm);
+  }
+  .help-banner[hidden]{display:none;}
+  .help-banner ul{margin:8px 0 8px 18px;}
+  .help-banner li{margin-bottom:4px;}
+  .help-banner .dismiss{
+    background:var(--teal);border:none;color:#fff;border-radius:7px;
+    padding:7px 14px;flex-shrink:0;
+  }
+  .help-banner .dismiss:hover{background:#0c5a46;}
+  .legend-strip{
+    font-size:12px;color:var(--text-soft);margin-bottom:14px;
+    background:#fff;border:1px solid var(--gray-border);border-radius:10px;
+    padding:8px 14px;line-height:1.7;
+  }
+  .legend-strip b{color:var(--text);}
+  .legend-strip .lk-doing{color:var(--teal);} .legend-strip .lk-signs{color:var(--blue-badge-text);}
+  .legend-strip .lk-asked{color:#9A6700;}
+  .legend-strip .lnk{color:var(--teal);cursor:pointer;text-decoration:underline;}
+
+  /* ---------- Workstream panels ---------- */
+  .ws{
+    background:#fff;border:1px solid var(--gray-border);border-radius:12px;
+    margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-sm);
+    border-left:4px solid var(--wsac,var(--teal));
+  }
+  .ws[data-ws="1"]{--wsac:var(--ws1);} .ws[data-ws="2"]{--wsac:var(--ws2);}
+  .ws[data-ws="3"]{--wsac:var(--ws3);} .ws[data-ws="4"]{--wsac:var(--ws4);}
+  .ws[data-ws="5"]{--wsac:var(--ws5);}
+  .ws-head{
+    display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;
+    user-select:none;background:#fff;flex-wrap:wrap;
+  }
+  .ws-head:hover{background:#FBFCFC;}
+  .ws-head .chev{transition:transform .15s;color:var(--text-soft);flex-shrink:0;}
+  .ws.collapsed .ws-head .chev{transform:rotate(-90deg);}
+  .ws-head h2{font-size:14.5px;font-weight:600;flex:1;min-width:200px;}
+  .ws-head h2 .ws-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--wsac);margin-right:7px;vertical-align:1px;}
+  .ws-progress{width:110px;height:7px;background:var(--gray-badge);border-radius:5px;overflow:hidden;flex-shrink:0;}
+  .ws-progress i{display:block;height:100%;background:var(--rag-green);border-radius:5px;transition:width .3s;}
+  .ws-head .ws-count{font-size:12px;color:var(--text-soft);white-space:nowrap;}
+  .rag-chip{
+    display:inline-flex;align-items:center;gap:5px;border-radius:20px;
+    padding:2px 9px;font-size:11px;font-weight:600;white-space:nowrap;
+  }
+  .rag-chip .dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+  .rag-chip.red{background:var(--rag-red-bg);color:var(--rag-red);}
+  .rag-chip.amber{background:var(--rag-amber-bg);color:var(--rag-amber);}
+  .rag-chip.green{background:var(--rag-green-bg);color:var(--rag-green);}
+  .ws-body{border-top:1px solid var(--gray-border);overflow-x:auto;}
+  .ws.collapsed .ws-body{display:none;}
+
+  .task-grid-head,.task-row{
+    display:grid;
+    grid-template-columns:44px minmax(180px,1.5fr) 118px 108px 108px 118px 128px 110px minmax(130px,1fr) 30px;
+    gap:8px;align-items:start;padding:9px 16px;
+    min-width:1120px;
+  }
+  .task-grid-head{
+    font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-soft);
+    border-bottom:1px solid var(--gray-border);background:#FBFCFC;padding-top:7px;padding-bottom:7px;
+  }
+  .task-row{border-bottom:1px solid #F0F2F3;}
+  .task-row:last-child{border-bottom:none;}
+  .task-row:hover{background:#FBFCFC;}
+  .tnum{color:var(--text-soft);font-variant-numeric:tabular-nums;padding-top:2px;}
+  .cell-label{display:none;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-soft);margin-bottom:2px;}
+
+  .editable{border-radius:5px;padding:2px 5px;margin:-2px -5px;min-height:1.4em;cursor:text;display:block;}
+  .editable:hover{background:var(--teal-soft);outline:1px dashed rgba(15,110,86,.35);}
+  .editable:empty::before{content:"—";color:#B7BEC4;}
+  .edit-input{
+    width:100%;border:1px solid var(--teal);border-radius:5px;padding:3px 5px;
+    font-size:13px;background:#fff;outline:none;resize:vertical;
+  }
+  .tname.done-task .editable{text-decoration:line-through;color:var(--text-soft);}
+  .tnotes .editable{color:var(--text-soft);font-size:12.5px;}
+  .editable.people{font-size:12.5px;color:var(--text-soft);}
+  .towner .editable{color:var(--text);}
+
+  /* ---------- Due date chip (RAG coded) ---------- */
+  .due-chip{
+    display:inline-flex;align-items:center;gap:5px;border-radius:8px;
+    padding:3px 8px;font-size:12px;font-weight:600;cursor:pointer;
+    border:1px solid transparent;white-space:nowrap;
+  }
+  .due-chip svg{width:11px;height:11px;flex-shrink:0;}
+  .due-chip:hover{border-color:currentColor;}
+  .due-chip.rag-red{background:var(--rag-red-bg);color:var(--rag-red);}
+  .due-chip.rag-amber{background:var(--rag-amber-bg);color:var(--rag-amber);}
+  .due-chip.rag-green{background:var(--rag-green-bg);color:var(--rag-green);}
+  .due-chip.rag-done{background:var(--gray-badge);color:var(--gray-badge-text);font-weight:500;}
+  .due-chip.rag-none{background:#FFF8E8;color:#9A6700;border:1px dashed #D9B44A;font-weight:500;}
+  .due-when{display:block;font-size:10.5px;margin-top:3px;font-weight:600;}
+  .due-when.rag-red{color:var(--rag-red);} .due-when.rag-amber{color:var(--rag-amber);}
+  .due-when.rag-green{color:var(--rag-green);}
+  .due-hint{display:block;font-size:10.5px;color:var(--text-soft);margin-top:2px;font-style:italic;}
+  .edit-input.date{font-size:12px;padding:2px 4px;}
+
   /* ---------- Status badges ---------- */
   .badge{
     display:inline-flex;align-items:center;gap:5px;border-radius:20px;
@@ -184,8 +255,8 @@
   .badge:hover{border-color:currentColor;}
   .badge.not_started{background:var(--gray-badge);color:var(--gray-badge-text);}
   .badge.working{background:var(--blue-badge);color:var(--blue-badge-text);}
-  .badge.stuck{background:var(--red-badge);color:var(--red-badge-text);}
-  .badge.done{background:var(--green-badge);color:var(--green-badge-text);}
+  .badge.stuck{background:var(--rag-red-bg);color:var(--rag-red);}
+  .badge.done{background:var(--rag-green-bg);color:var(--rag-green);}
   .status-select{border:1px solid var(--teal);border-radius:6px;padding:3px 4px;max-width:100%;}
 
   /* ---------- Row menu ---------- */
@@ -197,7 +268,7 @@
   .dots-btn:hover{background:var(--gray-badge);color:var(--text);}
   .row-menu{
     display:none;position:absolute;right:0;top:calc(100% + 2px);background:#fff;
-    border:1px solid var(--gray-border);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.12);
+    border:1px solid var(--gray-border);border-radius:8px;box-shadow:var(--shadow-md);
     min-width:170px;z-index:40;overflow:hidden;
   }
   .row-menu.open{display:block;}
@@ -207,11 +278,10 @@
 
   .ws-foot{padding:10px 16px;border-top:1px solid #F0F2F3;}
   .add-task-btn{
-    background:none;border:1px dashed var(--gray-border);border-radius:6px;
-    padding:6px 12px;color:var(--text-soft);width:100%;text-align:left;
+    background:none;border:1px dashed var(--gray-border);border-radius:8px;
+    padding:7px 12px;color:var(--text-soft);width:100%;text-align:left;transition:all .12s;
   }
-  .add-task-btn:hover{border-color:var(--teal);color:var(--teal);}
-
+  .add-task-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-soft);}
   .empty-msg{padding:14px 16px;color:var(--text-soft);font-size:13px;}
 
   /* ---------- Who does what ---------- */
@@ -229,6 +299,106 @@
   table.raci td.empty-cell{color:#C5CBD0;text-align:center;}
   .raci-note{padding:0 16px 14px;font-size:12px;color:var(--text-soft);}
 
+  /* ---------- Project team hierarchy ---------- */
+  .team-section{
+    background:#fff;border:1px solid var(--gray-border);border-radius:12px;
+    padding:18px 16px 22px;margin-bottom:14px;box-shadow:var(--shadow-sm);
+  }
+  .team-section h2{font-size:14.5px;font-weight:600;text-align:center;margin-bottom:4px;}
+  .team-section .sub{text-align:center;font-size:12px;color:var(--text-soft);margin-bottom:16px;}
+  .tier{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;}
+  .tier-link{width:2px;height:16px;background:#CDD6D2;margin:4px auto;}
+  .tier-label{text-align:center;font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--text-soft);margin-bottom:8px;}
+  .person-card{
+    border:1px solid var(--gray-border);border-radius:12px;padding:9px 16px;
+    display:flex;align-items:center;gap:10px;background:#fff;box-shadow:var(--shadow-sm);
+  }
+  .person-card.advisor{border-style:dashed;background:#FCFDFC;}
+  .avatar{
+    width:36px;height:36px;border-radius:50%;color:#fff;font-weight:700;font-size:13px;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:.5px;
+  }
+  .av1{background:linear-gradient(135deg,#0F6E56,#16916F);}
+  .av2{background:linear-gradient(135deg,#1B5FAB,#3B82F6);}
+  .av3{background:linear-gradient(135deg,#7C3AED,#A78BFA);}
+  .av4{background:linear-gradient(135deg,#B45309,#F59E0B);}
+  .av5{background:linear-gradient(135deg,#BE185D,#EC4899);}
+  .av6{background:linear-gradient(135deg,#0E7490,#22D3EE);}
+  .pname{font-weight:600;font-size:13px;}
+  .prole{font-size:11px;color:var(--text-soft);}
+
+  /* ---------- Dashboard page ---------- */
+  .dash-hero{
+    background:linear-gradient(135deg,#0F6E56 0%,#13855F 60%,#16916F 100%);
+    color:#fff;border-radius:16px;padding:20px 24px;margin-bottom:16px;
+    display:flex;align-items:center;gap:24px;flex-wrap:wrap;box-shadow:var(--shadow-md);
+  }
+  .dash-hero .big{font-size:42px;font-weight:750;line-height:1;}
+  .dash-hero .big small{font-size:18px;font-weight:600;opacity:.85;}
+  .dash-hero .hero-label{font-size:12.5px;opacity:.85;margin-top:4px;}
+  .dash-hero .hero-bar{flex:1;min-width:200px;}
+  .dash-hero .hero-bar .progress{height:10px;background:rgba(255,255,255,.25);}
+  .dash-hero .hero-bar .progress i{background:#fff;}
+  .dash-hero .hero-stats{display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;}
+  .dash-hero .hero-stats b{display:block;font-size:19px;}
+  .dash-hero .rag-chip{background:rgba(255,255,255,.18);color:#fff;}
+  .dash-hero .rag-chip.red{background:#FCEAEA;color:var(--rag-red);}
+  .dash-hero .rag-chip.amber{background:#FCF1E0;color:var(--rag-amber);}
+  .dash-hero .rag-chip.green{background:#E4F3EA;color:var(--rag-green);}
+  .progress{height:8px;background:var(--gray-badge);border-radius:6px;overflow:hidden;}
+  .progress i{display:block;height:100%;background:var(--rag-green);border-radius:6px;transition:width .3s;}
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+  .kpi{
+    background:#fff;border:1px solid var(--gray-border);border-radius:12px;padding:14px 16px;
+    box-shadow:var(--shadow-sm);border-left:4px solid var(--gray-border);
+  }
+  .kpi .num{font-size:26px;font-weight:700;}
+  .kpi .lbl{font-size:12px;color:var(--text-soft);margin-top:2px;}
+  .kpi.red{border-left-color:var(--rag-red);}   .kpi.red .num{color:var(--rag-red);}
+  .kpi.amber{border-left-color:#D9A23B;}        .kpi.amber .num{color:var(--rag-amber);}
+  .kpi.green{border-left-color:var(--rag-green);} .kpi.green .num{color:var(--rag-green);}
+  .kpi.gray .num{color:var(--gray-badge-text);}
+  .dash-panels{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .panel{
+    background:#fff;border:1px solid var(--gray-border);border-radius:12px;
+    padding:16px;box-shadow:var(--shadow-sm);
+  }
+  .panel h3{font-size:13.5px;font-weight:600;margin-bottom:12px;}
+  .panel h3 .count-chip{font-size:11px;font-weight:600;border-radius:12px;padding:1px 8px;margin-left:6px;vertical-align:1px;}
+  .donut-wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+  .donut{width:130px;height:130px;border-radius:50%;position:relative;flex-shrink:0;}
+  .donut::after{content:"";position:absolute;inset:16px;background:#fff;border-radius:50%;}
+  .donut .pct{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:1;font-weight:700;font-size:21px;
+  }
+  .donut .pct small{font-size:10px;font-weight:600;color:var(--text-soft);}
+  .donut-legend{font-size:12.5px;flex:1;min-width:140px;}
+  .donut-legend div{display:flex;align-items:center;gap:7px;margin-bottom:6px;}
+  .donut-legend .sw{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+  .donut-legend b{margin-left:auto;}
+  .wsh-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .wsh-row .nm{flex:1;font-size:12.5px;min-width:0;}
+  .wsh-row .nm .ws-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;}
+  .wsh-row .progress{width:120px;flex-shrink:0;}
+  .wsh-row .frac{font-size:11.5px;color:var(--text-soft);width:36px;text-align:right;flex-shrink:0;}
+  .attn-item{
+    display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border-radius:9px;
+    margin-bottom:8px;font-size:12.5px;border-left:4px solid;
+  }
+  .attn-item.red{background:var(--rag-red-bg);border-left-color:var(--rag-red);}
+  .attn-item.amber{background:var(--rag-amber-bg);border-left-color:#D9A23B;}
+  .attn-item .anum{font-weight:700;color:var(--text-soft);flex-shrink:0;}
+  .attn-item .awhy{font-weight:700;white-space:nowrap;flex-shrink:0;margin-left:auto;}
+  .attn-item.red .awhy{color:var(--rag-red);}
+  .attn-item.amber .awhy{color:var(--rag-amber);}
+  .attn-item .ameta{color:var(--text-soft);font-size:11.5px;display:block;margin-top:1px;}
+  .all-clear{
+    text-align:center;color:var(--rag-green);background:var(--rag-green-bg);
+    border-radius:9px;padding:16px;font-size:13px;font-weight:600;
+  }
+  .dash-note{font-size:11.5px;color:var(--text-soft);text-align:center;margin-top:14px;}
+
   /* ---------- Modals ---------- */
   .overlay{
     display:none;position:fixed;inset:0;background:rgba(20,30,35,.45);z-index:100;
@@ -236,7 +406,7 @@
   }
   .overlay.open{display:flex;}
   .modal{
-    background:#fff;border-radius:12px;max-width:640px;width:100%;
+    background:#fff;border-radius:14px;max-width:640px;width:100%;
     box-shadow:0 16px 50px rgba(0,0,0,.25);
   }
   .modal-head{
@@ -258,48 +428,43 @@
   .modal-foot{padding:12px 18px;border-top:1px solid var(--gray-border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
   .field-row{margin-bottom:12px;}
   .field-row label{display:block;font-size:12px;color:var(--text-soft);margin-bottom:4px;}
-  .field-row input[type=text],.field-row select,.field-row textarea{
+  .field-row input[type=text],.field-row input[type=date],.field-row select,.field-row textarea{
     width:100%;border:1px solid var(--gray-border);border-radius:8px;padding:8px 10px;min-height:auto;
     font-family:inherit;font-size:13px;
   }
   .field-row textarea{min-height:70px;}
-  .modal-section-divider{border-top:1px solid var(--gray-border);margin:16px -18px 14px;}
 
   /* ---------- Toast ---------- */
   .toast-wrap{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;align-items:center;}
   .toast{
-    background:#243038;color:#fff;border-radius:8px;padding:10px 16px;font-size:13px;
+    background:#243038;color:#fff;border-radius:10px;padding:10px 16px;font-size:13px;
     display:flex;align-items:center;gap:14px;box-shadow:0 8px 24px rgba(0,0,0,.3);
   }
   .toast button{background:none;border:none;color:#7FD4BC;font-weight:600;font-size:13px;}
   .toast button:hover{text-decoration:underline;}
 
-  .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-
   /* ---------- Mobile ---------- */
   @media (max-width:760px){
     body{font-size:14px;}
-    /* Top bar: title row, then a wrapping row of compact buttons */
     .topbar{position:static;padding:10px 12px;gap:8px;}
     .topbar .spacer{display:none;}
     .titleblock{flex:1;min-width:0;}
     .titleblock h1{font-size:15px;}
     .actions{flex-basis:100%;}
     .actions .btn{padding:7px 9px;font-size:12px;}
+    .viewtabs{width:100%;}
+    .viewtabs button{flex:1;padding:9px 8px;}
 
-    /* Summary: Total spans full width, the four statuses sit 2×2 */
     .summary{grid-template-columns:repeat(2,1fr);gap:8px;}
     .stat.total{grid-column:1 / -1;display:flex;align-items:baseline;gap:10px;}
     .stat{padding:10px 12px;}
     .stat .num{font-size:21px;}
 
-    /* Filters: stacked, full-width controls */
     .filters{flex-direction:column;align-items:stretch;gap:6px;padding:12px 14px;}
     .filters label{margin-bottom:-2px;}
     .filters select{max-width:none;width:100%;padding:9px 8px;}
     .filters .clear-filters{margin-left:0;align-self:flex-end;padding:6px 0;}
 
-    /* Task rows become cards: "1.1  [badge]" header, name, then fields */
     .task-grid-head{display:none;}
     .task-row{
       display:grid;
@@ -307,11 +472,11 @@
       grid-template-areas:
         "num   status"
         "name  name"
+        "due   due"
         "owner owner"
         "signs signs"
         "asked asked"
         "gets  gets"
-        "due   due"
         "notes notes";
       gap:8px 10px;
       padding:12px 44px 12px 14px;
@@ -329,29 +494,31 @@
     .tgets{grid-area:gets;}
     .tdue{grid-area:due;}
     .tnotes{grid-area:notes;}
-    .help-banner{flex-direction:column;}
-    .help-banner .dismiss{align-self:flex-end;}
     .cell-label{display:block;}
     .row-menu-wrap{position:absolute;top:9px;right:6px;}
     .dots-btn{padding:6px 9px;font-size:18px;}
     .row-menu{position:absolute;}
+    .help-banner{flex-direction:column;}
+    .help-banner .dismiss{align-self:flex-end;}
 
-    /* Bigger touch targets */
     .badge{padding:5px 12px;font-size:13px;}
     .editable{padding:4px 5px;margin:-4px -5px;}
     .ws-head{padding:13px 14px;}
-    .ws-foot,.task-row{padding-left:14px;}
+    .ws-progress{width:80px;}
     .add-task-btn{padding:10px 12px;}
 
-    /* 16px inputs stop iOS Safari from auto-zooming on focus */
     input,textarea,select,.edit-input,.status-select{font-size:16px;}
 
-    /* Modals: near-full-width sheets with comfortable buttons */
     .overlay{padding:14px 8px;}
     .modal-body{padding:14px;}
     .modal-foot{padding:12px 14px;}
     .modal-foot .btn{flex:1;justify-content:center;padding:11px 10px;font-size:14px;}
 
+    .dash-hero{padding:16px;gap:14px;}
+    .dash-hero .big{font-size:34px;}
+    .kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+    .dash-panels{grid-template-columns:1fr;}
+    .person-card{width:100%;}
     .raci-table-wrap{-webkit-overflow-scrolling:touch;}
     .wrap{padding:12px 10px 80px;}
     .toast-wrap{left:10px;right:10px;transform:none;}
@@ -363,24 +530,27 @@
   @media print{
     body{background:#fff;font-size:11px;}
     .topbar .btn,.gear-wrap,.filters,.dots-btn,.add-task-btn,.ws-foot,
-    .ws-head .chev,.toast-wrap,.overlay,.sync-pill,.help-banner{display:none !important;}
+    .ws-head .chev,.toast-wrap,.overlay,.sync-pill,.help-banner,.tabbar,
+    .legend-strip,.dash-note{display:none !important;}
     .task-grid-head,.task-row{min-width:0;gap:6px;padding:6px 8px;}
     .ws-body{overflow:visible;}
-    .topbar{position:static;border-bottom:2px solid var(--teal);}
+    .topbar{position:static;border-bottom:2px solid var(--teal);box-shadow:none;}
     .ws.collapsed .ws-body{display:block !important;}
-    .ws,.stat,.filters{border-color:#bbb;box-shadow:none;}
+    .ws,.stat,.kpi,.panel,.team-section{border-color:#bbb;box-shadow:none;}
     .ws{break-inside:avoid;page-break-inside:avoid;}
     .editable:hover{background:none;outline:none;}
     .editable:empty::before{content:"";}
-    .badge{border:1px solid #999;}
+    .badge,.due-chip,.rag-chip{border:1px solid #999;}
     .wrap{max-width:none;padding:0 4px;}
     .ws-head{cursor:default;}
+    .dash-hero{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   }
   body.print-preview .topbar .btn,
   body.print-preview .gear-wrap,
   body.print-preview .filters,
   body.print-preview .dots-btn,
   body.print-preview .add-task-btn,
+  body.print-preview .tabbar,
   body.print-preview .ws-foot{display:none !important;}
 </style>
 </head>
@@ -416,7 +586,7 @@
     </button>
     <div class="gear-menu" id="gearMenu">
       <button id="btnSyncSetup">Live sync settings…</button>
-      <button id="btnShowHelp">Show column help</button>
+      <button id="btnShowHelp">Show column guide</button>
       <button id="btnReset" class="danger">Reset to original task list</button>
     </div>
   </div>
@@ -425,50 +595,107 @@
 
 <main class="wrap">
 
-  <section class="summary" id="summary"></section>
-
-  <section class="filters">
-    <label for="fWs">Workstream</label>
-    <select id="fWs"></select>
-    <label for="fStatus">Status</label>
-    <select id="fStatus"></select>
-    <label for="fOwner">Owner</label>
-    <select id="fOwner"></select>
-    <button class="clear-filters" id="btnClearFilters">Clear filters</button>
-  </section>
-
-  <section class="help-banner" id="helpBanner" hidden>
-    <div>
-      <strong>How the people columns work</strong> — this is the project's "who does what" in plain words:
-      <ul>
-        <li><strong>Doing it</strong> — the owner: the person (or pair) actually doing the work. Every task needs one.</li>
-        <li><strong>Signs off</strong> — the one person who confirms it is properly done. Keep this to a single name — if two people sign off, neither does.</li>
-        <li><strong>Needs to be asked</strong> — people whose input is needed <em>before or while</em> doing it (e.g. JMT for TAT decisions). Ask them early; don't surprise them at sign-off.</li>
-        <li><strong>Gets update</strong> — people simply kept in the loop once things move. They don't need to act.</li>
-      </ul>
-      Click any of these cells on a task to type names. The "Who does what" table at the bottom of the page builds itself from what you type. You can reopen this guide any time from the ⚙ menu.
+  <div class="tabbar">
+    <div class="viewtabs">
+      <button id="tabTasks" data-view="tasks">Task board</button>
+      <button id="tabDash" data-view="dash">Director's dashboard</button>
     </div>
-    <button class="dismiss" id="btnDismissHelp">Got it</button>
-  </section>
+  </div>
 
-  <section id="workstreams"></section>
+  <!-- ================= TASK BOARD PAGE ================= -->
+  <div id="pageTasks">
 
-  <section class="ws" id="raciPanel">
-    <div class="ws-head" id="raciHead">
-      <svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
-      <h2>Who does what</h2>
-      <span class="ws-count">built automatically from the task list</span>
-    </div>
-    <div class="ws-body">
-      <div class="raci-table-wrap" id="raciTableWrap"></div>
-      <div class="raci-note">
-        <strong style="color:var(--teal)">Doing it</strong> = does the work &nbsp;•&nbsp;
-        <strong style="color:var(--blue-badge-text)">Signs off</strong> = approves it is done &nbsp;•&nbsp;
-        <strong style="color:#9A6700">Needs to be asked</strong> = give input before it's done &nbsp;•&nbsp;
-        <span>Gets update = kept in the loop</span>
+    <section class="summary" id="summary"></section>
+
+    <section class="filters">
+      <label for="fWs">Workstream</label>
+      <select id="fWs"></select>
+      <label for="fStatus">Status</label>
+      <select id="fStatus"></select>
+      <label for="fOwner">Owner</label>
+      <select id="fOwner"></select>
+      <button class="clear-filters" id="btnClearFilters">Clear filters</button>
+    </section>
+
+    <section class="help-banner" id="helpBanner" hidden>
+      <div>
+        <strong>How the people columns work</strong> — this is the project's "who does what" in plain words:
+        <ul>
+          <li><strong>Doing it</strong> — the owner: the person (or pair) actually doing the work. Every task needs one.</li>
+          <li><strong>Signs off</strong> — the one person who confirms it is properly done. Keep this to a single name — if two people sign off, neither does.</li>
+          <li><strong>Needs to be asked</strong> — people whose input is needed <em>before or while</em> doing it (e.g. JMT for TAT decisions). Ask them early; don't surprise them at sign-off.</li>
+          <li><strong>Gets update</strong> — people simply kept in the loop once things move. They don't need to act.</li>
+        </ul>
+        Colours follow a traffic light: <strong style="color:#CC3E3E">red</strong> = overdue or stuck, <strong style="color:#B45309">amber</strong> = due within 3 days or missing a date, <strong style="color:#1F7A43">green</strong> = on track or done. Click any cell to edit; click the due chip to pick a date from the calendar.
       </div>
+      <button class="dismiss" id="btnDismissHelp">Got it</button>
+    </section>
+
+    <div class="legend-strip" id="legendStrip">
+      Quick guide: <b class="lk-doing">Doing it</b> = does the work &nbsp;·&nbsp;
+      <b class="lk-signs">Signs off</b> = approves it's done &nbsp;·&nbsp;
+      <b class="lk-asked">Needs to be asked</b> = give input first &nbsp;·&nbsp;
+      <b>Gets update</b> = kept informed &nbsp;·&nbsp;
+      <span class="lnk" id="legendMore">full guide</span>
     </div>
-  </section>
+
+    <section id="workstreams"></section>
+
+    <section class="ws" id="raciPanel">
+      <div class="ws-head" id="raciHead">
+        <svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+        <h2>Who does what</h2>
+        <span class="ws-count">built automatically from the task list</span>
+      </div>
+      <div class="ws-body">
+        <div class="raci-table-wrap" id="raciTableWrap"></div>
+        <div class="raci-note">
+          <strong style="color:var(--teal)">Doing it</strong> = does the work &nbsp;•&nbsp;
+          <strong style="color:var(--blue-badge-text)">Signs off</strong> = approves it is done &nbsp;•&nbsp;
+          <strong style="color:#9A6700">Needs to be asked</strong> = give input before it's done &nbsp;•&nbsp;
+          <span>Gets update = kept in the loop</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="team-section">
+      <h2>Project team</h2>
+      <div class="sub">Who's who on this mobilisation — for reference</div>
+
+      <div class="tier-label">Project Chairperson</div>
+      <div class="tier">
+        <div class="person-card"><span class="avatar av3">AR</span><span><span class="pname">Dr. Arjun Rangarajan</span><br><span class="prole">Project Chairperson</span></span></div>
+      </div>
+      <div class="tier-link"></div>
+
+      <div class="tier-label">Project Head &amp; Advisors</div>
+      <div class="tier">
+        <div class="person-card"><span class="avatar av1">AL</span><span><span class="pname">Mr. Alex</span><br><span class="prole">Project Head</span></span></div>
+        <div class="person-card advisor"><span class="avatar av6">SI</span><span><span class="pname">Dr. Sindhuja</span><br><span class="prole">Project Advisor</span></span></div>
+        <div class="person-card advisor"><span class="avatar av6">VA</span><span><span class="pname">Ms. Vamci</span><br><span class="prole">Project Advisor</span></span></div>
+      </div>
+      <div class="tier-link"></div>
+
+      <div class="tier-label">Department Heads &amp; Product Owner</div>
+      <div class="tier">
+        <div class="person-card"><span class="avatar av1">MA</span><span><span class="pname">Ms. Thirumamangai (Mangai)</span><br><span class="prole">SD HOD</span></span></div>
+        <div class="person-card"><span class="avatar av4">AM</span><span><span class="pname">Mrs. Amudha</span><br><span class="prole">PR HOD — OP (Mogappair)</span></span></div>
+        <div class="person-card"><span class="avatar av4">AN</span><span><span class="pname">Mrs. Anuradha</span><br><span class="prole">PR HOD — IP (Anna Nagar)</span></span></div>
+        <div class="person-card"><span class="avatar av2">NI</span><span><span class="pname">Nikthesh</span><br><span class="prole">Product Owner</span></span></div>
+      </div>
+      <div class="tier-link"></div>
+
+      <div class="tier-label">Team Leads</div>
+      <div class="tier">
+        <div class="person-card"><span class="avatar av5">SA</span><span><span class="pname">Ms. Sandhya</span><br><span class="prole">SD TL — OP (Mogappair)</span></span></div>
+        <div class="person-card"><span class="avatar av5">CH</span><span><span class="pname">Ms. Chitra</span><br><span class="prole">SD TL — IP (Anna Nagar)</span></span></div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ================= DASHBOARD PAGE ================= -->
+  <div id="pageDash" style="display:none"></div>
 
 </main>
 
@@ -519,7 +746,8 @@
       <div class="field-row"><label>Signs off</label><input type="text" id="emSignoff"></div>
       <div class="field-row"><label>Needs to be asked</label><input type="text" id="emConsulted"></div>
       <div class="field-row"><label>Gets an update</label><input type="text" id="emInformed"></div>
-      <div class="field-row"><label>Due</label><input type="text" id="emDue" placeholder="e.g. Before POC start / 20 Jun"></div>
+      <div class="field-row"><label>Due date</label><input type="date" id="emDue"></div>
+      <div class="field-row"><label>Timing note (optional, e.g. "Before POC go-live")</label><input type="text" id="emDueHint"></div>
       <div class="field-row"><label>Status</label><select id="emStatus"></select></div>
       <div class="field-row"><label>Notes</label><textarea id="emNotes"></textarea></div>
     </div>
@@ -578,6 +806,7 @@ var STATUS_ICONS = {
   stuck:       '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2.2 14.6 13H1.4L8 2.2z" stroke-linejoin="round"/><path d="M8 6.5v3"/><circle cx="8" cy="11.4" r="0.4" fill="currentColor"/></svg>',
   done:        '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3.2 3L13 4.5"/></svg>'
 };
+var CAL_ICON = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg>';
 
 var WORKSTREAMS = [
   { id:1, name:"HR & Team Formalisation" },
@@ -586,64 +815,75 @@ var WORKSTREAMS = [
   { id:4, name:"Process Readiness & Workflow Alignment" },
   { id:5, name:"Communication & Governance" }
 ];
+var WS_COLORS = { 1:"#0F6E56", 2:"#1B5FAB", 3:"#7C3AED", 4:"#B45309", 5:"#BE185D" };
 
+/* Ordered by project hierarchy */
 var STAKEHOLDERS = [
-  { name:"Nikthesh",                              re:/nikthesh/i },
-  { name:"Mr. Alex",                              re:/\balex\b/i },
-  { name:"Ms. Thirumamangai",                     re:/thirumamangai/i },
-  { name:"HR Team (Mrs. Amudha / Mrs. Anuradha)", re:/\bhr\b|amudha|anuradha/i },
-  { name:"Dr. Sindhuja",                          re:/sindhuja/i },
-  { name:"Ms. Vamci (T&D)",                       re:/vamci/i },
-  { name:"Ms. Sandhya (OP SD TL)",                re:/sandhya|op sd tl/i },
-  { name:"Ms. Chitra (IP SD TL)",                 re:/chitra|ip sd tl/i },
-  { name:"Director / Dr. Arjun Rangarajan",       re:/director|arjun/i },
-  { name:"IT",                                    re:/\bIT\b/ },
-  { name:"Marketing",                             re:/marketing/i },
-  { name:"JMT / HODs",                            re:/\bjmt\b|\bhods?\b/i }
+  { name:"Dr. Arjun Rangarajan — Project Chairperson", re:/arjun/i },
+  { name:"Director",                                   re:/director/i },
+  { name:"Mr. Alex — Project Head",                    re:/\balex\b/i },
+  { name:"Dr. Sindhuja — Project Advisor",             re:/sindhuja/i },
+  { name:"Ms. Vamci — Project Advisor",                re:/vamci/i },
+  { name:"Ms. Thirumamangai (Mangai) — SD HOD",        re:/thirumamangai|mangai/i },
+  { name:"Nikthesh — Product Owner",                   re:/nikthesh/i },
+  { name:"Mrs. Amudha — PR HOD (OP)",                  re:/amudha/i },
+  { name:"Mrs. Anuradha — PR HOD (IP)",                re:/anuradha/i },
+  { name:"HR Team",                                    re:/\bhr\b/i },
+  { name:"Ms. Sandhya — SD TL (OP)",                   re:/sandhya|op sd tl/i },
+  { name:"Ms. Chitra — SD TL (IP)",                    re:/chitra|ip sd tl/i },
+  { name:"JMT / Department HODs",                      re:/\bjmt\b|\bhods?\b/i }
 ];
 
+function isoOffset(days){
+  var d = new Date(Date.now() + days*86400000);
+  var m = d.getMonth()+1, dd = d.getDate();
+  return d.getFullYear() + "-" + (m<10?"0":"") + m + "-" + (dd<10?"0":"") + dd;
+}
+
 function seedTasks(){
+  // [ws, num, name, owner, signoff, informed, dueHint, notes, dueOffsetDays]
   var t = [
     // Workstream 1 — HR & Team Formalisation
-    [1,"1.1","Confirm and freeze OP SD team composition at Mogappair (1 TL Ms. Sandhya + 2 IVRS Executives + Care Coordinator + CC Intern)","Mrs. Amudha / Mrs. Anuradha (HR)","Director","Dr. Sindhuja, Mr. Alex, Nikthesh","Earliest possible","3 IVRS agents redeployed from OP PR. No new hire."],
-    [1,"1.2","Confirm and freeze IP SD team composition at Anna Nagar (1 TL Ms. Chitra + 1 IVRS Executive + 1 IP PR executive)","Mrs. Amudha / Mrs. Anuradha (HR)","Director","Dr. Sindhuja, Mr. Alex, Nikthesh","Earliest possible","IP PR executive freed from feedback duty."],
-    [1,"1.3","Issue formal role-alignment letters / internal deployment orders for all redeployed staff","HR Team","Director","All team leads","After freeze","Covers IVRS → SD, CC → SD, IP PR → SD transitions."],
-    [1,"1.4","Confirm reporting structure for OP SD Team (TL reports to Ms. Thirumamangai, Project Head)","HR Team","Ms. Thirumamangai","Dr. Sindhuja, Mr. Alex","After role letters","Governance: Dr. Arjun Rangarajan chairs project."],
-    [1,"1.5","Confirm reporting structure for IP SD Team (same governance)","HR Team","Ms. Thirumamangai","Dr. Sindhuja, Mr. Alex","After role letters",""],
-    [1,"1.6","Complete handover briefings from IVRS team to redeployed executives","Mr. Alex + Team Leads","Ms. Thirumamangai","HR, Nikthesh","Before POC start","Ensure no disruption to remaining 6 IVRS agents (64.5% utilisation)."],
+    [1,"1.1","Confirm and freeze OP SD team composition at Mogappair (1 TL Ms. Sandhya + 2 IVRS Executives + Care Coordinator + CC Intern)","Mrs. Amudha / Mrs. Anuradha (HR)","Director","Dr. Sindhuja, Mr. Alex, Nikthesh","Earliest possible","3 IVRS agents redeployed from OP PR. No new hire.",3],
+    [1,"1.2","Confirm and freeze IP SD team composition at Anna Nagar (1 TL Ms. Chitra + 1 IVRS Executive + 1 IP PR executive)","Mrs. Amudha / Mrs. Anuradha (HR)","Director","Dr. Sindhuja, Mr. Alex, Nikthesh","Earliest possible","IP PR executive freed from feedback duty.",3],
+    [1,"1.3","Issue formal role-alignment letters / internal deployment orders for all redeployed staff","HR Team","Director","All team leads","After freeze","Covers IVRS → SD, CC → SD, IP PR → SD transitions.",6],
+    [1,"1.4","Confirm reporting structure for OP SD Team (TL reports to Ms. Thirumamangai)","HR Team","Ms. Thirumamangai","Dr. Sindhuja, Mr. Alex","After role letters","Governance: Dr. Arjun Rangarajan chairs project.",8],
+    [1,"1.5","Confirm reporting structure for IP SD Team (same governance)","HR Team","Ms. Thirumamangai","Dr. Sindhuja, Mr. Alex","After role letters","",8],
+    [1,"1.6","Complete handover briefings from IVRS team to redeployed executives","Mr. Alex + Team Leads","Ms. Thirumamangai","HR, Nikthesh","Before POC start","Ensure no disruption to remaining 6 IVRS agents (64.5% utilisation).",10],
     // Workstream 2 — SOP & Training Manual
-    [2,"2.1","Share approved SOP and Training Manual with all stakeholders","Mr. Alex","Ms. Thirumamangai","HR, Dr. Sindhuja, Nikthesh, Team Leads","Immediately (director's request)","Director has explicitly asked Mr. Alex to share this at the earliest."],
-    [2,"2.2","Confirm SOP covers: feedback collection, complaint view-only protocol for SD, RCA/CAPA documentation, Google review guidance, wow moments","Mr. Alex","Dr. Sindhuja","Nikthesh","On share",""],
-    [2,"2.3","Confirm Training Manual covers SterloCare module navigation for SD Executives","Mr. Alex + Ms. Vamci (T&D)","Ms. Thirumamangai","HR, Nikthesh","On share","SterloCare = complaint & feedback platform."],
-    [2,"2.4","Commence formal training program for SD Executives (OP + IP) per approved SOP","Mr. Alex + Ms. Vamci","Ms. Thirumamangai","Dr. Sindhuja, Nikthesh","After manpower freeze","Training to run in parallel with POC setup."],
-    [2,"2.5","Train IP Telephone Operator (TO) team on SterloCare modules (Phase 2 readiness)","Mr. Alex + Ms. Vamci","Ms. Thirumamangai","IP TL Ms. Chitra","During POC period","TO team: 6 agents, currently 7.4% utilisation. Phase 2 role: night-hour SD support."],
+    [2,"2.1","Share approved SOP and Training Manual with all stakeholders","Mr. Alex","Ms. Thirumamangai","HR, Dr. Sindhuja, Nikthesh, Team Leads","Immediately (director's request)","Director has explicitly asked Mr. Alex to share this at the earliest.",1],
+    [2,"2.2","Confirm SOP covers: feedback collection, complaint view-only protocol for SD, RCA/CAPA documentation, Google review guidance, wow moments","Mr. Alex","Dr. Sindhuja","Nikthesh","On share","",3],
+    [2,"2.3","Confirm Training Manual covers SterloCare module navigation for SD Executives","Mr. Alex + Ms. Vamci (T&D)","Ms. Thirumamangai","HR, Nikthesh","On share","SterloCare = complaint & feedback platform.",3],
+    [2,"2.4","Commence formal training program for SD Executives (OP + IP) per approved SOP","Mr. Alex + Ms. Vamci","Ms. Thirumamangai","Dr. Sindhuja, Nikthesh","After manpower freeze","Training to run in parallel with POC setup.",6],
+    [2,"2.5","Train IP Telephone Operator (TO) team on SterloCare modules (Phase 2 readiness)","Mr. Alex + Ms. Vamci","Ms. Thirumamangai","IP TL Ms. Chitra","During POC period","TO team: 6 agents, currently 7.4% utilisation. Phase 2 role: night-hour SD support.",21],
     // Workstream 3 — POC Setup
-    [3,"3.1","Initiate POC process — define scope, timelines, and success metrics","Nikthesh","Ms. Thirumamangai","Mr. Alex, Dr. Sindhuja, HR","As soon as manpower confirmed","Director has asked Nikthesh to lead POC and share regular updates."],
-    [3,"3.2","Configure SterloCare complaint module for OP (Mogappair) — PR as owner, SD as view-only","Nikthesh + Mr. Alex (Sterlo vendor)","Ms. Thirumamangai","OP PR Section Head, OP SD TL","Before POC go-live","TAT 1 = 15 min acknowledgement. TAT 2 & 3 to be defined by JMT at operationalisation."],
-    [3,"3.3","Configure SterloCare feedback module for OP SD Team — target 75 feedback/day","Nikthesh + Mr. Alex","Ms. Thirumamangai","OP SD TL Ms. Sandhya","Before POC go-live","NPS QR + tablet at OP counters. 0–5 scores trigger WhatsApp follow-up."],
-    [3,"3.4","Configure SterloCare feedback module for IP SD Team — target 28 feedback/day (discharge day)","Nikthesh + Mr. Alex","Ms. Thirumamangai","IP SD TL Ms. Chitra","Before POC go-live","Face-to-face collection at bedside on discharge day."],
-    [3,"3.5","Set up Director-level live dashboard access on SterloCare","Nikthesh + Sterlo vendor","Ms. Thirumamangai","Director, Dr. Arjun Rangarajan","Before go-live","Directors must see all modules for both campuses in real time."],
-    [3,"3.6","Configure automated weekly report dispatch from SterloCare to Director","Nikthesh + Sterlo vendor","Ms. Thirumamangai","Director","Before go-live","Covers complaints, TAT compliance, feedback scores, Google review trends."],
-    [3,"3.7","Install QR codes + tablets at OP counters (Mogappair)","Nikthesh + IT","Mr. Alex","OP SD TL","Before POC start",""],
-    [3,"3.8","Install bedside QR + tablets at IP wards (Anna Nagar)","Nikthesh + IT","Mr. Alex","IP SD TL","Before POC start",""],
-    [3,"3.9","Define Closing TAT and HOD Resolution TAT for all 14 departments (currently undecided)","Nikthesh (facilitates)","JMT + HODs","All stakeholders","At operationalisation","Acknowledgement TAT is fixed at 15 min. These two are pending JMT decision."],
+    [3,"3.1","Initiate POC process — define scope, timelines, and success metrics","Nikthesh","Ms. Thirumamangai","Mr. Alex, Dr. Sindhuja, HR","As soon as manpower confirmed","Director has asked Nikthesh to lead POC and share regular updates.",4],
+    [3,"3.2","Configure SterloCare complaint module for OP (Mogappair) — PR as owner, SD as view-only","Nikthesh + Mr. Alex (Sterlo vendor)","Ms. Thirumamangai","OP PR Section Head, OP SD TL","Before POC go-live","TAT 1 = 15 min acknowledgement. TAT 2 & 3 to be defined by JMT at operationalisation.",12],
+    [3,"3.3","Configure SterloCare feedback module for OP SD Team — target 75 feedback/day","Nikthesh + Mr. Alex","Ms. Thirumamangai","OP SD TL Ms. Sandhya","Before POC go-live","NPS QR + tablet at OP counters. 0–5 scores trigger WhatsApp follow-up.",12],
+    [3,"3.4","Configure SterloCare feedback module for IP SD Team — target 28 feedback/day (discharge day)","Nikthesh + Mr. Alex","Ms. Thirumamangai","IP SD TL Ms. Chitra","Before POC go-live","Face-to-face collection at bedside on discharge day.",12],
+    [3,"3.5","Set up Director-level live dashboard access on SterloCare","Nikthesh + Sterlo vendor","Ms. Thirumamangai","Director, Dr. Arjun Rangarajan","Before go-live","Directors must see all modules for both campuses in real time.",12],
+    [3,"3.6","Configure automated weekly report dispatch from SterloCare to Director","Nikthesh + Sterlo vendor","Ms. Thirumamangai","Director","Before go-live","Covers complaints, TAT compliance, feedback scores, Google review trends.",12],
+    [3,"3.7","Install QR codes + tablets at OP counters (Mogappair)","Nikthesh + IT","Mr. Alex","OP SD TL","Before POC start","",10],
+    [3,"3.8","Install bedside QR + tablets at IP wards (Anna Nagar)","Nikthesh + IT","Mr. Alex","IP SD TL","Before POC start","",10],
+    [3,"3.9","Define Closing TAT and HOD Resolution TAT for all 14 departments (currently undecided)","Nikthesh (facilitates)","JMT + HODs","All stakeholders","At operationalisation","Acknowledgement TAT is fixed at 15 min. These two are pending JMT decision.",30],
     // Workstream 4 — Process Readiness & Workflow Alignment
-    [4,"4.1","Brief OP PR Section Head and HOD on new complaint workflow (SD is view-only; PR owns closure)","Mr. Alex + Nikthesh","Ms. Thirumamangai","OP PR team","Before POC","PR Section Head facilitates; cannot close complaints. SD cannot close complaints in OP."],
-    [4,"4.2","Brief IP PR team on restored core PR function (feedback duty removed; Level A escalation role formalised)","Mr. Alex + Nikthesh","Ms. Thirumamangai","IP PR team, IP SD TL","Before POC","IP PR now freed for full-time complaint management."],
-    [4,"4.3","Brief all 14 Department Section Heads on complaint acknowledgement responsibility (15-min TAT)","Ms. Thirumamangai + Mr. Alex","Director","HODs","Before go-live","Section Heads are the only complaint closure authority."],
-    [4,"4.4","Brief all 14 Department HODs on escalation protocol (TAT 2 breach → HOD notified; TAT 3 breach → Director notified)","Ms. Thirumamangai","Director","All Section Heads","Before go-live",""],
-    [4,"4.5","Define wow moments documentation format and monthly review process","Mr. Alex + SD TLs","Ms. Thirumamangai","Dr. Sindhuja, Nikthesh","During training","Wow moments to be documented, reviewed monthly, shared as best practice."],
-    [4,"4.6","Define RCA/CAPA documentation template for SD Executives","Mr. Alex + Dr. Sindhuja","Ms. Thirumamangai","SD TLs, Nikthesh","During training","SD own RCA/CAPA for feedback; PR Section Head reviews."],
-    [4,"4.7","Confirm Google review ethical guidance process and training for SD Executives","Mr. Alex + Marketing","Ms. Thirumamangai","SD TLs","During training","Marketing team to support; no incentivised reviews."],
+    [4,"4.1","Brief OP PR Section Head and HOD on new complaint workflow (SD is view-only; PR owns closure)","Mr. Alex + Nikthesh","Ms. Thirumamangai","OP PR team","Before POC","PR Section Head facilitates; cannot close complaints. SD cannot close complaints in OP.",9],
+    [4,"4.2","Brief IP PR team on restored core PR function (feedback duty removed; Level A escalation role formalised)","Mr. Alex + Nikthesh","Ms. Thirumamangai","IP PR team, IP SD TL","Before POC","IP PR now freed for full-time complaint management.",9],
+    [4,"4.3","Brief all 14 Department Section Heads on complaint acknowledgement responsibility (15-min TAT)","Ms. Thirumamangai + Mr. Alex","Director","HODs","Before go-live","Section Heads are the only complaint closure authority.",12],
+    [4,"4.4","Brief all 14 Department HODs on escalation protocol (TAT 2 breach → HOD notified; TAT 3 breach → Director notified)","Ms. Thirumamangai","Director","All Section Heads","Before go-live","",12],
+    [4,"4.5","Define wow moments documentation format and monthly review process","Mr. Alex + SD TLs","Ms. Thirumamangai","Dr. Sindhuja, Nikthesh","During training","Wow moments to be documented, reviewed monthly, shared as best practice.",14],
+    [4,"4.6","Define RCA/CAPA documentation template for SD Executives","Mr. Alex + Dr. Sindhuja","Ms. Thirumamangai","SD TLs, Nikthesh","During training","SD own RCA/CAPA for feedback; PR Section Head reviews.",14],
+    [4,"4.7","Confirm Google review ethical guidance process and training for SD Executives","Mr. Alex + Marketing","Ms. Thirumamangai","SD TLs","During training","Marketing team to support; no incentivised reviews.",14],
     // Workstream 5 — Communication & Governance
-    [5,"5.1","Share daily status update on shared Excel sheet (activities, pending actions, support needed, timelines)","Nikthesh","Ms. Thirumamangai","Director, Mr. Alex, HR, Dr. Sindhuja","Daily from today","Director has explicitly asked Nikthesh to maintain this."],
-    [5,"5.2","Share RACI matrix (who does what across all workstreams) with all stakeholders","Nikthesh","Ms. Thirumamangai","All project stakeholders","By end of tomorrow","Director's explicit ask: \"share daily updates with RACI matrix by end of tomorrow.\""],
-    [5,"5.3","Share regular POC progress updates with all stakeholders","Nikthesh","Ms. Thirumamangai","Director, Mr. Alex, HR, Dr. Sindhuja","Weekly during POC",""],
-    [5,"5.4","Conduct implementation readiness check across OP SD + IP SD + IT + PR + HR before go-live","Nikthesh + Mr. Alex","Ms. Thirumamangai","Director","Before go-live",""]
+    [5,"5.1","Share daily status update on shared Excel sheet (activities, pending actions, support needed, timelines)","Nikthesh","Ms. Thirumamangai","Director, Mr. Alex, HR, Dr. Sindhuja","Daily from today","Director has explicitly asked Nikthesh to maintain this.",0],
+    [5,"5.2","Share RACI matrix (who does what across all workstreams) with all stakeholders","Nikthesh","Ms. Thirumamangai","All project stakeholders","By end of tomorrow","Director's explicit ask: \"share daily updates with RACI matrix by end of tomorrow.\"",1],
+    [5,"5.3","Share regular POC progress updates with all stakeholders","Nikthesh","Ms. Thirumamangai","Director, Mr. Alex, HR, Dr. Sindhuja","Weekly during POC","",7],
+    [5,"5.4","Conduct implementation readiness check across OP SD + IP SD + IT + PR + HR before go-live","Nikthesh + Mr. Alex","Ms. Thirumamangai","Director","Before go-live","",12]
   ];
   var now = Date.now();
   return t.map(function(r,i){
-    return { id:i+1, ws:r[0], num:r[1], name:r[2], owner:r[3], signoff:r[4], consulted:"", informed:r[5], due:r[6], status:"not_started", notes:r[7], deleted:false, updatedAt:now };
+    return { id:i+1, ws:r[0], num:r[1], name:r[2], owner:r[3], signoff:r[4], consulted:"", informed:r[5],
+             due:isoOffset(r[8]), dueHint:r[6], status:"not_started", notes:r[7], deleted:false, updatedAt:now };
   });
 }
 
@@ -657,9 +897,12 @@ function freshState(){
     collapsed: {},
     raciCollapsed: false,
     helpDismissed: false,
+    view: "tasks",
     sync: { url:"" }
   };
 }
+
+var ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 var state;
 function load(){
@@ -672,9 +915,16 @@ function load(){
         for(var k in d){ if(!(k in s)) s[k] = d[k]; }
         if(!s.filters) s.filters = { ws:"all", status:"all", owner:"all" };
         if(!s.sync || typeof s.sync.url !== "string") s.sync = { url:"" };
+        if(s.view !== "dash") s.view = "tasks";
         s.tasks.forEach(function(t){
           if(t.consulted == null) t.consulted = "";
+          if(t.dueHint == null) t.dueHint = "";
           if(!t.updatedAt) t.updatedAt = s.lastUpdated || Date.now();
+          // Older versions stored free text in due; keep it as the timing note.
+          if(t.due && !ISO_RE.test(t.due)){
+            if(!t.dueHint) t.dueHint = t.due;
+            t.due = "";
+          }
         });
         state = s;
         return;
@@ -706,6 +956,49 @@ function findTask(id){
 function renderTimestamp(){
   var d = new Date(state.lastUpdated);
   $("lastUpdated").textContent = "Last updated: " + d.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}) + ", " + d.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"});
+}
+
+/* ---------- due date / RAG helpers ---------- */
+function dueInfo(t){
+  if(!t.due || !ISO_RE.test(t.due)) return { code: t.status==="done" ? "done" : "none", days:null };
+  var p = t.due.split("-");
+  var due = new Date(+p[0], +p[1]-1, +p[2]);
+  var now = new Date();
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var days = Math.round((due - today) / 86400000);
+  if(t.status === "done") return { code:"done", days:days };
+  if(days < 0)  return { code:"overdue", days:days };
+  if(days <= 3) return { code:"soon", days:days };
+  return { code:"ok", days:days };
+}
+function fmtDueDate(iso){
+  if(!iso || !ISO_RE.test(iso)) return "";
+  var p = iso.split("-");
+  var d = new Date(+p[0], +p[1]-1, +p[2]);
+  var opts = { day:"numeric", month:"short" };
+  if(d.getFullYear() !== new Date().getFullYear()) opts.year = "2-digit";
+  return d.toLocaleDateString(undefined, opts);
+}
+function dueWhenText(info){
+  if(info.days == null) return "";
+  if(info.code === "overdue") return (-info.days) + (info.days === -1 ? " day late" : " days late");
+  if(info.days === 0) return "due today";
+  if(info.code === "soon") return "in " + info.days + (info.days === 1 ? " day" : " days");
+  return "";
+}
+function wsRag(tasks){
+  if(!tasks.length) return { cls:"green", label:"On track" };
+  var anyRed=false, anyAmber=false, allDone=true;
+  tasks.forEach(function(t){
+    if(t.status!=="done") allDone=false;
+    var di = dueInfo(t);
+    if(t.status==="stuck" || di.code==="overdue") anyRed=true;
+    else if(di.code==="soon" || di.code==="none") anyAmber=true;
+  });
+  if(allDone) return { cls:"green", label:"All done" };
+  if(anyRed)  return { cls:"red", label:"At risk" };
+  if(anyAmber)return { cls:"amber", label:"Watch" };
+  return { cls:"green", label:"On track" };
 }
 
 /* ---------- toast ---------- */
@@ -797,17 +1090,39 @@ function statusBadge(t){
 function editableCell(t, field, cls){
   return '<span class="editable '+(cls||"")+'" data-act="edit" data-id="'+t.id+'" data-field="'+field+'">'+esc(t[field]||"")+'</span>';
 }
+function dueCell(t){
+  var info = dueInfo(t);
+  var html;
+  if(info.code === "none"){
+    html = '<span class="due-chip rag-none" data-act="edit-due" data-id="'+t.id+'" title="A due date is required — click to pick one">'+CAL_ICON+'Pick a date</span>';
+  }else{
+    var cls = info.code === "overdue" ? "rag-red"
+            : info.code === "soon"    ? "rag-amber"
+            : info.code === "done"    ? "rag-done" : "rag-green";
+    html = '<span class="due-chip '+cls+'" data-act="edit-due" data-id="'+t.id+'" title="Click to change the date">'+CAL_ICON+esc(fmtDueDate(t.due))+'</span>';
+    var when = dueWhenText(info);
+    if(when && info.code !== "done"){
+      html += '<span class="due-when '+(info.code==="overdue"?"rag-red":info.code==="soon"?"rag-amber":"rag-green")+'">'+esc(when)+'</span>';
+    }
+  }
+  if(t.dueHint) html += '<span class="due-hint">'+esc(t.dueHint)+'</span>';
+  return html;
+}
 function renderWorkstreams(){
   var html = "";
   WORKSTREAMS.forEach(function(w){
     var all = liveTasks().filter(function(t){ return t.ws===w.id; });
     var shown = all.filter(taskPassesFilter);
     var doneCount = all.filter(function(t){ return t.status==="done"; }).length;
+    var pct = all.length ? Math.round(doneCount/all.length*100) : 0;
+    var rag = wsRag(all);
     var collapsed = !!state.collapsed[w.id];
     html += '<div class="ws'+(collapsed?" collapsed":"")+'" data-ws="'+w.id+'">';
     html += '<div class="ws-head" data-act="toggle-ws" data-ws="'+w.id+'">'+
       '<svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>'+
-      '<h2>Workstream '+w.id+' — '+esc(w.name)+'</h2>'+
+      '<h2><span class="ws-dot"></span>Workstream '+w.id+' — '+esc(w.name)+'</h2>'+
+      '<span class="rag-chip '+rag.cls+'"><span class="dot"></span>'+rag.label+'</span>'+
+      '<div class="ws-progress" title="'+pct+'% done"><i style="width:'+pct+'%"></i></div>'+
       '<span class="ws-count">'+doneCount+' of '+all.length+' done</span></div>';
     html += '<div class="ws-body">';
     if(shown.length){
@@ -816,7 +1131,7 @@ function renderWorkstreams(){
         '<div title="The one person who confirms it is properly done">Signs off</div>'+
         '<div title="People whose input is needed before or while doing it">Needs to be asked</div>'+
         '<div title="People kept in the loop — no action needed from them">Gets update</div>'+
-        '<div>Status</div><div>Due</div><div>Notes</div><div></div></div>';
+        '<div>Status</div><div title="Click the chip to pick a date">Due</div><div>Notes</div><div></div></div>';
       shown.forEach(function(t){
         html += '<div class="task-row" data-id="'+t.id+'">'+
           '<div class="tnum">'+esc(t.num)+'</div>'+
@@ -826,7 +1141,7 @@ function renderWorkstreams(){
           '<div class="tasked"><span class="cell-label">Needs to be asked</span>'+editableCell(t,"consulted","people")+'</div>'+
           '<div class="tgets"><span class="cell-label">Gets update</span>'+editableCell(t,"informed","people")+'</div>'+
           '<div class="tstatus"><span class="cell-label">Status</span>'+statusBadge(t)+'</div>'+
-          '<div class="tdue"><span class="cell-label">Due</span>'+editableCell(t,"due")+'</div>'+
+          '<div class="tdue"><span class="cell-label">Due</span>'+dueCell(t)+'</div>'+
           '<div class="tnotes"><span class="cell-label">Notes</span>'+editableCell(t,"notes")+'</div>'+
           '<div class="row-menu-wrap">'+
             '<button class="dots-btn" data-act="row-menu" data-id="'+t.id+'" aria-label="Task menu">···</button>'+
@@ -884,10 +1199,150 @@ function renderRaci(){
   $("raciTableWrap").innerHTML = html;
 }
 
+/* ---------- Director's dashboard ---------- */
+function renderDashboard(){
+  var tasks = liveTasks();
+  var total = tasks.length;
+  var c = { done:0, working:0, stuck:0, not_started:0 };
+  var overdue = [], soon = [], noDate = [], next7 = [];
+  tasks.forEach(function(t){
+    c[t.status] = (c[t.status]||0) + 1;
+    var di = dueInfo(t);
+    if(di.code === "overdue") overdue.push({ t:t, di:di });
+    if(di.code === "soon") soon.push({ t:t, di:di });
+    if(di.code === "none") noDate.push(t);
+    if(t.status !== "done" && di.days != null && di.days >= 0 && di.days <= 7) next7.push({ t:t, di:di });
+  });
+  var pct = total ? Math.round(c.done/total*100) : 0;
+  var due7 = next7.length;
+  var overall = (overdue.length || c.stuck) ? { cls:"red", label:"Needs attention" }
+              : (soon.length || noDate.length) ? { cls:"amber", label:"Watch closely" }
+              : { cls:"green", label:"On track" };
+
+  /* donut: done green, working blue, stuck red, not started gray */
+  var seg = function(n){ return total ? n/total*360 : 0; };
+  var a1 = seg(c.done), a2 = a1 + seg(c.working), a3 = a2 + seg(c.stuck);
+  var donutBg = total
+    ? "conic-gradient(#2E9E5B 0deg "+a1+"deg, #3B82F6 "+a1+"deg "+a2+"deg, #CC3E3E "+a2+"deg "+a3+"deg, #D5DADD "+a3+"deg 360deg)"
+    : "conic-gradient(#D5DADD 0deg 360deg)";
+
+  var html = "";
+
+  /* hero */
+  html += '<div class="dash-hero">'+
+    '<div><div class="big">'+pct+'<small>%</small></div><div class="hero-label">of mobilisation tasks done</div></div>'+
+    '<div class="hero-bar"><div class="progress"><i style="width:'+pct+'%"></i></div>'+
+      '<div class="hero-label" style="margin-top:6px">'+c.done+' of '+total+' tasks complete · updates live as the team edits</div></div>'+
+    '<div class="hero-stats">'+
+      '<span><b>'+overdue.length+'</b>overdue</span>'+
+      '<span><b>'+c.stuck+'</b>stuck</span>'+
+      '<span><b>'+due7+'</b>due in 7 days</span>'+
+    '</div>'+
+    '<span class="rag-chip '+overall.cls+'"><span class="dot"></span>'+overall.label+'</span>'+
+  '</div>';
+
+  /* KPI cards */
+  html += '<div class="kpi-grid">'+
+    '<div class="kpi '+(overdue.length?"red":"green")+'"><div class="num">'+overdue.length+'</div><div class="lbl">Overdue tasks</div></div>'+
+    '<div class="kpi '+(c.stuck?"red":"green")+'"><div class="num">'+c.stuck+'</div><div class="lbl">Stuck — needs help</div></div>'+
+    '<div class="kpi '+(due7?"amber":"green")+'"><div class="num">'+due7+'</div><div class="lbl">Due in next 7 days</div></div>'+
+    '<div class="kpi '+(noDate.length?"amber":"green")+'"><div class="num">'+noDate.length+'</div><div class="lbl">Missing a due date</div></div>'+
+  '</div>';
+
+  html += '<div class="dash-panels">';
+
+  /* status breakdown */
+  html += '<div class="panel"><h3>Status overview</h3><div class="donut-wrap">'+
+    '<div class="donut" style="background:'+donutBg+'"><div class="pct">'+pct+'%<small>DONE</small></div></div>'+
+    '<div class="donut-legend">'+
+      '<div><span class="sw" style="background:#2E9E5B"></span>Done<b>'+c.done+'</b></div>'+
+      '<div><span class="sw" style="background:#3B82F6"></span>Working on it<b>'+c.working+'</b></div>'+
+      '<div><span class="sw" style="background:#CC3E3E"></span>Stuck — needs help<b>'+c.stuck+'</b></div>'+
+      '<div><span class="sw" style="background:#D5DADD"></span>Not started yet<b>'+c.not_started+'</b></div>'+
+    '</div></div></div>';
+
+  /* workstream health */
+  html += '<div class="panel"><h3>Workstream health</h3>';
+  WORKSTREAMS.forEach(function(w){
+    var wt = tasks.filter(function(t){ return t.ws===w.id; });
+    var dn = wt.filter(function(t){ return t.status==="done"; }).length;
+    var wpct = wt.length ? Math.round(dn/wt.length*100) : 0;
+    var rag = wsRag(wt);
+    var od = wt.filter(function(t){ return dueInfo(t).code==="overdue"; }).length;
+    html += '<div class="wsh-row">'+
+      '<span class="nm"><span class="ws-dot" style="background:'+WS_COLORS[w.id]+'"></span>'+esc(w.name)+
+        (od ? ' <span style="color:var(--rag-red);font-weight:600;font-size:11px">· '+od+' overdue</span>' : '')+'</span>'+
+      '<div class="progress"><i style="width:'+wpct+'%"></i></div>'+
+      '<span class="frac">'+dn+'/'+wt.length+'</span>'+
+      '<span class="rag-chip '+rag.cls+'"><span class="dot"></span>'+rag.label+'</span>'+
+    '</div>';
+  });
+  html += '</div>';
+
+  /* needs attention */
+  var attn = [];
+  overdue.sort(function(a,b){ return a.di.days - b.di.days; }).forEach(function(o){
+    attn.push({ t:o.t, cls:"red", why:dueWhenText(o.di) });
+  });
+  tasks.forEach(function(t){
+    if(t.status==="stuck" && dueInfo(t).code!=="overdue") attn.push({ t:t, cls:"red", why:"stuck" });
+  });
+  noDate.forEach(function(t){ attn.push({ t:t, cls:"amber", why:"no due date" }); });
+  html += '<div class="panel"><h3>Needs attention'+
+    (attn.length ? ' <span class="count-chip" style="background:var(--rag-red-bg);color:var(--rag-red)">'+attn.length+'</span>' : '')+'</h3>';
+  if(attn.length){
+    attn.slice(0,10).forEach(function(a){
+      html += '<div class="attn-item '+a.cls+'"><span class="anum">'+esc(a.t.num)+'</span>'+
+        '<span style="min-width:0">'+esc(a.t.name)+
+        '<span class="ameta">'+esc(a.t.owner||"no owner")+(a.t.due ? ' · due '+esc(fmtDueDate(a.t.due)) : '')+'</span></span>'+
+        '<span class="awhy">'+esc(a.why)+'</span></div>';
+    });
+    if(attn.length > 10) html += '<div class="dash-note">+ '+(attn.length-10)+' more — see the task board</div>';
+  }else{
+    html += '<div class="all-clear">Nothing overdue, nothing stuck. All clear.</div>';
+  }
+  html += '</div>';
+
+  /* coming up */
+  next7.sort(function(a,b){ return a.di.days - b.di.days; });
+  html += '<div class="panel"><h3>Coming up — next 7 days'+
+    (next7.length ? ' <span class="count-chip" style="background:var(--rag-amber-bg);color:var(--rag-amber)">'+next7.length+'</span>' : '')+'</h3>';
+  if(next7.length){
+    next7.slice(0,10).forEach(function(o){
+      var lbl = o.di.days===0 ? "today" : o.di.days===1 ? "tomorrow" : "in "+o.di.days+" days";
+      html += '<div class="attn-item amber"><span class="anum">'+esc(o.t.num)+'</span>'+
+        '<span style="min-width:0">'+esc(o.t.name)+
+        '<span class="ameta">'+esc(o.t.owner||"no owner")+' · '+esc(fmtDueDate(o.t.due))+'</span></span>'+
+        '<span class="awhy">'+lbl+'</span></div>';
+    });
+    if(next7.length > 10) html += '<div class="dash-note">+ '+(next7.length-10)+' more</div>';
+  }else{
+    html += '<div class="all-clear">No deadlines in the next 7 days.</div>';
+  }
+  html += '</div>';
+
+  html += '</div>'; /* dash-panels */
+  html += '<div class="dash-note">This dashboard rebuilds itself from the task board in real time'+
+    (syncStatus==="live" ? " — live sync is on, so it reflects the whole team's latest updates." : ".")+'</div>';
+
+  $("pageDash").innerHTML = html;
+}
+
+/* ---------- render ---------- */
+var pendingEdit = null;
 function render(){
   renderTimestamp();
-  $("helpBanner").hidden = !!state.helpDismissed;
   renderSyncPill();
+  var dash = state.view === "dash";
+  $("pageTasks").style.display = dash ? "none" : "";
+  $("pageDash").style.display = dash ? "" : "none";
+  $("tabTasks").classList.toggle("active", !dash);
+  $("tabDash").classList.toggle("active", dash);
+  if(dash){
+    renderDashboard();
+    return;
+  }
+  $("helpBanner").hidden = !!state.helpDismissed;
   renderSummary();
   renderFilters();
   renderWorkstreams();
@@ -901,8 +1356,7 @@ function render(){
 }
 
 /* ---------- inline editing ---------- */
-var EDIT_ORDER = ["name","owner","signoff","consulted","informed","due","notes"];
-var pendingEdit = null;
+var EDIT_ORDER = ["name","owner","signoff","consulted","informed","notes"];
 
 function startInlineEdit(span){
   if(span.dataset.editing) return;
@@ -944,6 +1398,35 @@ function startInlineEdit(span){
   });
 }
 
+function startDueEdit(el){
+  if(el.dataset.editing) return;
+  el.dataset.editing = "1";
+  var id = parseInt(el.dataset.id,10);
+  var t = findTask(id); if(!t) return;
+  var input = document.createElement("input");
+  input.type = "date";
+  input.className = "edit-input date";
+  input.value = t.due || "";
+  el.style.display = "none";
+  el.parentNode.insertBefore(input, el.nextSibling);
+  input.focus();
+  if(input.showPicker){ try{ input.showPicker(); }catch(e){} }
+  var finished = false;
+  function commit(){
+    if(finished) return;
+    finished = true;
+    var v = input.value;
+    if(v && v !== (t.due||"")){ t.due = v; t.updatedAt = Date.now(); persist(); }
+    render();
+  }
+  input.addEventListener("change", commit);
+  input.addEventListener("blur", function(){ setTimeout(commit, 150); });
+  input.addEventListener("keydown", function(e){
+    if(e.key==="Escape"){ finished = true; render(); }
+    if(e.key==="Enter"){ e.preventDefault(); commit(); }
+  });
+}
+
 function startStatusEdit(badgeEl){
   var id = parseInt(badgeEl.dataset.id,10);
   var t = findTask(id); if(!t) return;
@@ -979,7 +1462,7 @@ function addTask(wsId){
   var t = {
     id: state.nextId++, ws: wsId, num: wsId + "." + (minor+1),
     name: "New task", owner: "", signoff: "", consulted: "", informed: "",
-    due: "", status: "not_started", notes: "", deleted: false, updatedAt: Date.now()
+    due: "", dueHint: "", status: "not_started", notes: "", deleted: false, updatedAt: Date.now()
   };
   state.tasks.push(t);
   persist();
@@ -1014,7 +1497,8 @@ function openEditModal(id){
   $("emSignoff").value = t.signoff||"";
   $("emConsulted").value = t.consulted||"";
   $("emInformed").value = t.informed||"";
-  $("emDue").value = t.due||"";
+  $("emDue").value = ISO_RE.test(t.due||"") ? t.due : "";
+  $("emDueHint").value = t.dueHint||"";
   $("emNotes").value = t.notes||"";
   var sel = $("emStatus");
   sel.innerHTML = "";
@@ -1027,12 +1511,18 @@ function openEditModal(id){
 }
 $("btnSaveEdit").addEventListener("click", function(){
   var t = findTask(editModalTaskId); if(!t){ closeOverlay("editOverlay"); return; }
+  var due = $("emDue").value;
+  if(!due){
+    toast("Please pick a due date — every task needs one.", null, null, 3500);
+    return;
+  }
   t.name = $("emName").value.trim();
   t.owner = $("emOwner").value.trim();
   t.signoff = $("emSignoff").value.trim();
   t.consulted = $("emConsulted").value.trim();
   t.informed = $("emInformed").value.trim();
-  t.due = $("emDue").value.trim();
+  t.due = due;
+  t.dueHint = $("emDueHint").value.trim();
   t.status = $("emStatus").value;
   t.notes = $("emNotes").value.trim();
   t.updatedAt = Date.now();
@@ -1054,7 +1544,7 @@ document.querySelectorAll(".overlay").forEach(function(ov){
 /* ---------- export / import / share ---------- */
 function exportPayload(){
   return JSON.stringify({
-    app: "smf_sd_tracker", version: 1,
+    app: "smf_sd_tracker", version: 2,
     exportedAt: new Date().toISOString(),
     nextId: state.nextId,
     sync: (state.sync && state.sync.url) ? { url: state.sync.url } : undefined,
@@ -1103,7 +1593,9 @@ function normalizeTask(t){
     id: parseInt(t.id,10) || 0, ws: parseInt(t.ws,10) || 1, num: String(t.num||""),
     name: String(t.name||""), owner: String(t.owner||""),
     signoff: String(t.signoff||""), consulted: String(t.consulted||""),
-    informed: String(t.informed||""), due: String(t.due||""),
+    informed: String(t.informed||""),
+    due: ISO_RE.test(String(t.due||"")) ? String(t.due) : "",
+    dueHint: String(t.dueHint||""),
     status: STATUSES.some(function(s){ return s.key===t.status; }) ? t.status : "not_started",
     notes: String(t.notes||""), deleted: !!t.deleted,
     updatedAt: parseInt(t.updatedAt,10) || Date.now()
@@ -1113,6 +1605,8 @@ function applyImport(data){
   var maxId = 0;
   var tasks = data.tasks.map(function(t){
     var n = normalizeTask(t);
+    // Older exports kept free text in due — preserve it as the timing note.
+    if(!n.due && t.due && !ISO_RE.test(String(t.due)) && !n.dueHint) n.dueHint = String(t.due);
     maxId = Math.max(maxId, n.id);
     return n;
   });
@@ -1141,7 +1635,7 @@ function b64urlDecode(str){
 }
 function shareLink(){
   var payload = JSON.stringify({
-    app:"smf_sd_tracker", version:1, nextId:state.nextId,
+    app:"smf_sd_tracker", version:2, nextId:state.nextId,
     sync: (state.sync && state.sync.url) ? { url: state.sync.url } : undefined,
     tasks:liveTasks()
   });
@@ -1346,7 +1840,16 @@ window.addEventListener("afterprint", function(){
   document.body.classList.remove("print-preview");
 });
 
-/* ---------- settings / reset ---------- */
+/* ---------- view tabs ---------- */
+function setView(v){
+  state.view = v;
+  persist(false);
+  render();
+}
+$("tabTasks").addEventListener("click", function(){ setView("tasks"); });
+$("tabDash").addEventListener("click", function(){ setView("dash"); });
+
+/* ---------- settings / help / reset ---------- */
 $("btnGear").addEventListener("click", function(e){
   e.stopPropagation();
   $("gearMenu").classList.toggle("open");
@@ -1356,9 +1859,16 @@ $("btnDismissHelp").addEventListener("click", function(){
   persist(false);
   render();
 });
+$("legendMore").addEventListener("click", function(){
+  state.helpDismissed = false;
+  persist(false);
+  render();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
 $("btnShowHelp").addEventListener("click", function(){
   $("gearMenu").classList.remove("open");
   state.helpDismissed = false;
+  state.view = "tasks";
   persist(false);
   render();
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1391,7 +1901,6 @@ $("btnClearFilters").addEventListener("click", function(){
 
 /* ---------- delegated clicks ---------- */
 document.addEventListener("click", function(e){
-  // close any open menus when clicking elsewhere
   if(!e.target.closest(".row-menu-wrap")){
     document.querySelectorAll(".row-menu.open").forEach(function(m){ m.classList.remove("open"); });
   }
@@ -1407,6 +1916,8 @@ document.addEventListener("click", function(e){
     render();
   }else if(act==="edit"){
     startInlineEdit(el);
+  }else if(act==="edit-due"){
+    startDueEdit(el);
   }else if(act==="status"){
     startStatusEdit(el);
   }else if(act==="row-menu"){
@@ -1436,6 +1947,9 @@ window.addEventListener("storage", function(e){
     render();
   }
 });
+
+/* Refresh due-date RAG colours when a new day starts while the page is open */
+setInterval(function(){ if(!document.querySelector(".edit-input, .status-select")) render(); }, 10*60*1000);
 
 /* ---------- boot ---------- */
 load();
