@@ -112,13 +112,14 @@
   .ws.collapsed .ws-head .chev{transform:rotate(-90deg);}
   .ws-head h2{font-size:14.5px;font-weight:600;flex:1;}
   .ws-head .ws-count{font-size:12px;color:var(--text-soft);}
-  .ws-body{border-top:1px solid var(--gray-border);}
+  .ws-body{border-top:1px solid var(--gray-border);overflow-x:auto;}
   .ws.collapsed .ws-body{display:none;}
 
   .task-grid-head,.task-row{
     display:grid;
-    grid-template-columns:56px minmax(220px,1.4fr) 170px 150px 130px minmax(180px,1.2fr) 36px;
+    grid-template-columns:44px minmax(180px,1.5fr) 120px 110px 110px 120px 130px 95px minmax(140px,1fr) 30px;
     gap:8px;align-items:start;padding:9px 16px;
+    min-width:1120px;
   }
   .task-grid-head{
     font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-soft);
@@ -140,6 +141,38 @@
   .tname.done-task .editable{text-decoration:line-through;color:var(--text-soft);}
   .tnotes .editable{color:var(--text-soft);font-size:12.5px;}
   .tdue .editable{font-size:12.5px;}
+  .editable.people{font-size:12.5px;color:var(--text-soft);}
+  .towner .editable{color:var(--text);}
+
+  /* ---------- Help banner (plain-language RACI guide) ---------- */
+  .help-banner{
+    background:var(--teal-soft);border:1px solid #BFDDD3;border-radius:10px;
+    padding:14px 16px;margin-bottom:16px;font-size:13px;
+    display:flex;gap:14px;align-items:flex-start;
+  }
+  .help-banner[hidden]{display:none;}
+  .help-banner ul{margin:8px 0 8px 18px;}
+  .help-banner li{margin-bottom:4px;}
+  .help-banner .dismiss{
+    background:var(--teal);border:none;color:#fff;border-radius:6px;
+    padding:7px 14px;flex-shrink:0;
+  }
+  .help-banner .dismiss:hover{background:#0c5a46;}
+
+  /* ---------- Sync status pill ---------- */
+  .sync-pill{
+    border:none;border-radius:20px;padding:2px 9px;font-size:11px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:5px;vertical-align:middle;margin-left:6px;
+  }
+  .sync-pill .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;}
+  .sync-pill.local{background:var(--gray-badge);color:var(--gray-badge-text);}
+  .sync-pill.live{background:var(--green-badge);color:var(--green-badge-text);}
+  .sync-pill.live .dot{animation:pulse 2s infinite;}
+  .sync-pill.offline,.sync-pill.connecting{background:#FFF3CD;color:#8A6D00;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .setup-steps{padding-left:20px;font-size:12.5px;color:var(--text-soft);margin:0 0 14px;}
+  .setup-steps li{margin-bottom:6px;}
+  .setup-steps code{background:var(--gray-badge);padding:1px 5px;border-radius:4px;font-size:11.5px;}
 
   /* ---------- Status badges ---------- */
   .badge{
@@ -191,6 +224,7 @@
   table.raci td .role{display:block;white-space:nowrap;}
   table.raci td .role.doing{color:var(--teal);font-weight:600;}
   table.raci td .role.signs{color:var(--blue-badge-text);}
+  table.raci td .role.asked{color:#9A6700;}
   table.raci td .role.gets{color:var(--text-soft);}
   table.raci td.empty-cell{color:#C5CBD0;text-align:center;}
   .raci-note{padding:0 16px 14px;font-size:12px;color:var(--text-soft);}
@@ -274,11 +308,15 @@
         "num   status"
         "name  name"
         "owner owner"
+        "signs signs"
+        "asked asked"
+        "gets  gets"
         "due   due"
         "notes notes";
       gap:8px 10px;
       padding:12px 44px 12px 14px;
       position:relative;
+      min-width:0;
     }
     .tnum{grid-area:num;font-weight:600;color:var(--text);padding-top:3px;}
     .tstatus{grid-area:status;justify-self:start;}
@@ -286,8 +324,13 @@
     .tname{grid-area:name;font-size:15px;line-height:1.4;}
     .tname .cell-label{display:none;}
     .towner{grid-area:owner;}
+    .tsigns{grid-area:signs;}
+    .tasked{grid-area:asked;}
+    .tgets{grid-area:gets;}
     .tdue{grid-area:due;}
     .tnotes{grid-area:notes;}
+    .help-banner{flex-direction:column;}
+    .help-banner .dismiss{align-self:flex-end;}
     .cell-label{display:block;}
     .row-menu-wrap{position:absolute;top:9px;right:6px;}
     .dots-btn{padding:6px 9px;font-size:18px;}
@@ -316,10 +359,13 @@
   }
 
   /* ---------- Print / PDF-ready view ---------- */
+  @page{size:A4 landscape;margin:12mm;}
   @media print{
-    body{background:#fff;font-size:12px;}
+    body{background:#fff;font-size:11px;}
     .topbar .btn,.gear-wrap,.filters,.dots-btn,.add-task-btn,.ws-foot,
-    .ws-head .chev,.toast-wrap,.overlay{display:none !important;}
+    .ws-head .chev,.toast-wrap,.overlay,.sync-pill,.help-banner{display:none !important;}
+    .task-grid-head,.task-row{min-width:0;gap:6px;padding:6px 8px;}
+    .ws-body{overflow:visible;}
     .topbar{position:static;border-bottom:2px solid var(--teal);}
     .ws.collapsed .ws-body{display:block !important;}
     .ws,.stat,.filters{border-color:#bbb;box-shadow:none;}
@@ -344,7 +390,7 @@
   <span class="logo">SMF</span>
   <div class="titleblock">
     <h1>Service Delivery Mobilisation Tracker</h1>
-    <div class="updated" id="lastUpdated">Last updated: —</div>
+    <div class="updated"><span id="lastUpdated">Last updated: —</span><button class="sync-pill local" id="syncPill" title="Live sync settings"><span class="dot"></span><span id="syncPillText">Local only</span></button></div>
   </div>
   <span class="spacer"></span>
   <div class="actions">
@@ -369,6 +415,8 @@
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.8v1.7M8 12.5v1.7M1.8 8h1.7M12.5 8h1.7M3.6 3.6l1.2 1.2M11.2 11.2l1.2 1.2M12.4 3.6l-1.2 1.2M4.8 11.2l-1.2 1.2"/></svg>
     </button>
     <div class="gear-menu" id="gearMenu">
+      <button id="btnSyncSetup">Live sync settings…</button>
+      <button id="btnShowHelp">Show column help</button>
       <button id="btnReset" class="danger">Reset to original task list</button>
     </div>
   </div>
@@ -389,6 +437,20 @@
     <button class="clear-filters" id="btnClearFilters">Clear filters</button>
   </section>
 
+  <section class="help-banner" id="helpBanner" hidden>
+    <div>
+      <strong>How the people columns work</strong> — this is the project's "who does what" in plain words:
+      <ul>
+        <li><strong>Doing it</strong> — the owner: the person (or pair) actually doing the work. Every task needs one.</li>
+        <li><strong>Signs off</strong> — the one person who confirms it is properly done. Keep this to a single name — if two people sign off, neither does.</li>
+        <li><strong>Needs to be asked</strong> — people whose input is needed <em>before or while</em> doing it (e.g. JMT for TAT decisions). Ask them early; don't surprise them at sign-off.</li>
+        <li><strong>Gets update</strong> — people simply kept in the loop once things move. They don't need to act.</li>
+      </ul>
+      Click any of these cells on a task to type names. The "Who does what" table at the bottom of the page builds itself from what you type. You can reopen this guide any time from the ⚙ menu.
+    </div>
+    <button class="dismiss" id="btnDismissHelp">Got it</button>
+  </section>
+
   <section id="workstreams"></section>
 
   <section class="ws" id="raciPanel">
@@ -402,6 +464,7 @@
       <div class="raci-note">
         <strong style="color:var(--teal)">Doing it</strong> = does the work &nbsp;•&nbsp;
         <strong style="color:var(--blue-badge-text)">Signs off</strong> = approves it is done &nbsp;•&nbsp;
+        <strong style="color:#9A6700">Needs to be asked</strong> = give input before it's done &nbsp;•&nbsp;
         <span>Gets update = kept in the loop</span>
       </div>
     </div>
@@ -454,6 +517,7 @@
       <div class="field-row"><label>Task</label><textarea id="emName"></textarea></div>
       <div class="field-row"><label>Owner (doing it)</label><input type="text" id="emOwner"></div>
       <div class="field-row"><label>Signs off</label><input type="text" id="emSignoff"></div>
+      <div class="field-row"><label>Needs to be asked</label><input type="text" id="emConsulted"></div>
       <div class="field-row"><label>Gets an update</label><input type="text" id="emInformed"></div>
       <div class="field-row"><label>Due</label><input type="text" id="emDue" placeholder="e.g. Before POC start / 20 Jun"></div>
       <div class="field-row"><label>Status</label><select id="emStatus"></select></div>
@@ -462,6 +526,32 @@
     <div class="modal-foot">
       <button class="btn" data-close="editOverlay">Cancel</button>
       <button class="btn btn-primary" id="btnSaveEdit">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Live sync settings modal -->
+<div class="overlay" id="syncOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3>Live sync — updates on every device, instantly</h3><button class="modal-close" data-close="syncOverlay">×</button></div>
+    <div class="modal-body">
+      <p class="hint">With live sync ON, any change anyone makes appears on everyone else's open tracker within a couple of seconds. <strong>Only one person needs to do this setup, once.</strong> Everyone else just opens the share link.</p>
+      <ol class="setup-steps">
+        <li>Go to <strong>console.firebase.google.com</strong> and sign in with any Google account → <strong>Create a project</strong> (free, no card needed). Skip Analytics.</li>
+        <li>In the left menu: <strong>Build → Realtime Database → Create database</strong> → pick a location → choose <strong>"Start in test mode"</strong>.</li>
+        <li>Copy the database URL shown at the top (looks like <code>https://yourproject-default-rtdb.firebaseio.com/</code>) and paste it below.</li>
+        <li>Click <strong>Connect</strong>, then use <strong>"Copy share link"</strong> in the top bar — that link carries the connection, so colleagues who open it join live sync automatically.</li>
+      </ol>
+      <div class="field-row">
+        <label>Database URL</label>
+        <input type="text" id="syncUrlInput" placeholder="https://yourproject-default-rtdb.firebaseio.com/">
+      </div>
+      <p class="hint">Note: test mode expires after 30 days — in Firebase, open the <strong>Rules</strong> tab and set both <code>.read</code> and <code>.write</code> to <code>true</code> to keep it running. Anyone who has the link can edit, so share it only within the team and don't store anything confidential.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="btnSyncOff" style="margin-right:auto;color:#C04A1E;">Turn off sync</button>
+      <button class="btn" data-close="syncOverlay">Cancel</button>
+      <button class="btn btn-primary" id="btnSyncConnect">Connect</button>
     </div>
   </div>
 </div>
@@ -551,8 +641,9 @@ function seedTasks(){
     [5,"5.3","Share regular POC progress updates with all stakeholders","Nikthesh","Ms. Thirumamangai","Director, Mr. Alex, HR, Dr. Sindhuja","Weekly during POC",""],
     [5,"5.4","Conduct implementation readiness check across OP SD + IP SD + IT + PR + HR before go-live","Nikthesh + Mr. Alex","Ms. Thirumamangai","Director","Before go-live",""]
   ];
+  var now = Date.now();
   return t.map(function(r,i){
-    return { id:i+1, ws:r[0], num:r[1], name:r[2], owner:r[3], signoff:r[4], informed:r[5], due:r[6], status:"not_started", notes:r[7], deleted:false };
+    return { id:i+1, ws:r[0], num:r[1], name:r[2], owner:r[3], signoff:r[4], consulted:"", informed:r[5], due:r[6], status:"not_started", notes:r[7], deleted:false, updatedAt:now };
   });
 }
 
@@ -564,7 +655,9 @@ function freshState(){
     lastUpdated: Date.now(),
     filters: { ws:"all", status:"all", owner:"all" },
     collapsed: {},
-    raciCollapsed: false
+    raciCollapsed: false,
+    helpDismissed: false,
+    sync: { url:"" }
   };
 }
 
@@ -578,6 +671,11 @@ function load(){
         var d = freshState();
         for(var k in d){ if(!(k in s)) s[k] = d[k]; }
         if(!s.filters) s.filters = { ws:"all", status:"all", owner:"all" };
+        if(!s.sync || typeof s.sync.url !== "string") s.sync = { url:"" };
+        s.tasks.forEach(function(t){
+          if(t.consulted == null) t.consulted = "";
+          if(!t.updatedAt) t.updatedAt = s.lastUpdated || Date.now();
+        });
         state = s;
         return;
       }
@@ -590,6 +688,7 @@ function persist(touch){
   if(touch !== false) state.lastUpdated = Date.now();
   try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){ /* storage full or blocked */ }
   renderTimestamp();
+  if(touch !== false) schedulePush();
 }
 
 /* ---------- helpers ---------- */
@@ -712,12 +811,20 @@ function renderWorkstreams(){
       '<span class="ws-count">'+doneCount+' of '+all.length+' done</span></div>';
     html += '<div class="ws-body">';
     if(shown.length){
-      html += '<div class="task-grid-head"><div>#</div><div>Task</div><div>Owner</div><div>Status</div><div>Due</div><div>Notes</div><div></div></div>';
+      html += '<div class="task-grid-head"><div>#</div><div>Task</div>'+
+        '<div title="The owner — the person actually doing the work">Doing it</div>'+
+        '<div title="The one person who confirms it is properly done">Signs off</div>'+
+        '<div title="People whose input is needed before or while doing it">Needs to be asked</div>'+
+        '<div title="People kept in the loop — no action needed from them">Gets update</div>'+
+        '<div>Status</div><div>Due</div><div>Notes</div><div></div></div>';
       shown.forEach(function(t){
         html += '<div class="task-row" data-id="'+t.id+'">'+
           '<div class="tnum">'+esc(t.num)+'</div>'+
           '<div class="tname'+(t.status==="done"?" done-task":"")+'"><span class="cell-label">Task</span>'+editableCell(t,"name")+'</div>'+
-          '<div class="towner"><span class="cell-label">Owner</span>'+editableCell(t,"owner")+'</div>'+
+          '<div class="towner"><span class="cell-label">Doing it</span>'+editableCell(t,"owner")+'</div>'+
+          '<div class="tsigns"><span class="cell-label">Signs off</span>'+editableCell(t,"signoff","people")+'</div>'+
+          '<div class="tasked"><span class="cell-label">Needs to be asked</span>'+editableCell(t,"consulted","people")+'</div>'+
+          '<div class="tgets"><span class="cell-label">Gets update</span>'+editableCell(t,"informed","people")+'</div>'+
           '<div class="tstatus"><span class="cell-label">Status</span>'+statusBadge(t)+'</div>'+
           '<div class="tdue"><span class="cell-label">Due</span>'+editableCell(t,"due")+'</div>'+
           '<div class="tnotes"><span class="cell-label">Notes</span>'+editableCell(t,"notes")+'</div>'+
@@ -748,9 +855,10 @@ function renderRaci(){
   liveTasks().forEach(function(t){
     STAKEHOLDERS.forEach(function(st){
       var cell = map[st.name][t.ws] = map[st.name][t.ws] || {};
-      if(st.re.test(t.owner||""))    cell.doing = true;
-      if(st.re.test(t.signoff||""))  cell.signs = true;
-      if(st.re.test(t.informed||"")) cell.gets  = true;
+      if(st.re.test(t.owner||""))     cell.doing = true;
+      if(st.re.test(t.signoff||""))   cell.signs = true;
+      if(st.re.test(t.consulted||"")) cell.asked = true;
+      if(st.re.test(t.informed||""))  cell.gets  = true;
     });
   });
   var html = '<table class="raci"><thead><tr><th>Person / team</th>';
@@ -764,6 +872,7 @@ function renderRaci(){
       var parts = [];
       if(c.doing) parts.push('<span class="role doing">Doing it</span>');
       if(c.signs) parts.push('<span class="role signs">Signs off</span>');
+      if(c.asked) parts.push('<span class="role asked">Needs to be asked</span>');
       if(c.gets)  parts.push('<span class="role gets">Gets update</span>');
       if(parts.length){ any = true; row += '<td>'+parts.join("")+'</td>'; }
       else row += '<td class="empty-cell">—</td>';
@@ -777,6 +886,8 @@ function renderRaci(){
 
 function render(){
   renderTimestamp();
+  $("helpBanner").hidden = !!state.helpDismissed;
+  renderSyncPill();
   renderSummary();
   renderFilters();
   renderWorkstreams();
@@ -790,7 +901,7 @@ function render(){
 }
 
 /* ---------- inline editing ---------- */
-var EDIT_ORDER = ["name","owner","due","notes"];
+var EDIT_ORDER = ["name","owner","signoff","consulted","informed","due","notes"];
 var pendingEdit = null;
 
 function startInlineEdit(span){
@@ -814,7 +925,7 @@ function startInlineEdit(span){
     if(finished) return;
     finished = true;
     var v = input.value.trim();
-    if(v !== (t[field]||"")){ t[field] = v; persist(); }
+    if(v !== (t[field]||"")){ t[field] = v; t.updatedAt = Date.now(); persist(); }
     if(nextField) pendingEdit = { id:id, field:nextField };
     render();
   }
@@ -848,7 +959,7 @@ function startStatusEdit(badgeEl){
   badgeEl.parentNode.insertBefore(sel, badgeEl.nextSibling);
   sel.focus();
   function done(saveIt){
-    if(saveIt && sel.value !== t.status){ t.status = sel.value; persist(); }
+    if(saveIt && sel.value !== t.status){ t.status = sel.value; t.updatedAt = Date.now(); persist(); }
     render();
   }
   sel.addEventListener("change", function(){ done(true); });
@@ -867,8 +978,8 @@ function addTask(wsId){
   });
   var t = {
     id: state.nextId++, ws: wsId, num: wsId + "." + (minor+1),
-    name: "New task", owner: "", signoff: "", informed: "",
-    due: "", status: "not_started", notes: "", deleted: false
+    name: "New task", owner: "", signoff: "", consulted: "", informed: "",
+    due: "", status: "not_started", notes: "", deleted: false, updatedAt: Date.now()
   };
   state.tasks.push(t);
   persist();
@@ -878,20 +989,18 @@ function addTask(wsId){
 }
 function deleteTask(id){
   var t = findTask(id); if(!t) return;
+  // Deleted tasks stay as hidden tombstones so the deletion also
+  // reaches other devices when live sync is on.
   t.deleted = true;
+  t.updatedAt = Date.now();
   persist();
   render();
   toast('Deleted "'+ (t.name.length>40 ? t.name.slice(0,40)+"…" : t.name) +'"', "Undo", function(){
     t.deleted = false;
+    t.updatedAt = Date.now();
     persist();
     render();
   }, 5000);
-  setTimeout(function(){
-    if(t.deleted){
-      state.tasks = state.tasks.filter(function(x){ return x.id !== id; });
-      persist(false);
-    }
-  }, 5200);
 }
 
 /* ---------- edit modal ---------- */
@@ -903,6 +1012,7 @@ function openEditModal(id){
   $("emName").value = t.name||"";
   $("emOwner").value = t.owner||"";
   $("emSignoff").value = t.signoff||"";
+  $("emConsulted").value = t.consulted||"";
   $("emInformed").value = t.informed||"";
   $("emDue").value = t.due||"";
   $("emNotes").value = t.notes||"";
@@ -920,10 +1030,12 @@ $("btnSaveEdit").addEventListener("click", function(){
   t.name = $("emName").value.trim();
   t.owner = $("emOwner").value.trim();
   t.signoff = $("emSignoff").value.trim();
+  t.consulted = $("emConsulted").value.trim();
   t.informed = $("emInformed").value.trim();
   t.due = $("emDue").value.trim();
   t.status = $("emStatus").value;
   t.notes = $("emNotes").value.trim();
+  t.updatedAt = Date.now();
   persist();
   closeOverlay("editOverlay");
   render();
@@ -945,6 +1057,7 @@ function exportPayload(){
     app: "smf_sd_tracker", version: 1,
     exportedAt: new Date().toISOString(),
     nextId: state.nextId,
+    sync: (state.sync && state.sync.url) ? { url: state.sync.url } : undefined,
     tasks: liveTasks()
   }, null, 2);
 }
@@ -981,28 +1094,41 @@ $("btnDoImport").addEventListener("click", function(){
   }
   if(!confirm("Import this data? It will REPLACE everything currently saved on this device.")) return;
   applyImport(data);
+  adoptSyncFrom(data);
   closeOverlay("importOverlay");
   toast("Imported " + liveTasks().length + " tasks.", null, null, 3000);
 });
+function normalizeTask(t){
+  return {
+    id: parseInt(t.id,10) || 0, ws: parseInt(t.ws,10) || 1, num: String(t.num||""),
+    name: String(t.name||""), owner: String(t.owner||""),
+    signoff: String(t.signoff||""), consulted: String(t.consulted||""),
+    informed: String(t.informed||""), due: String(t.due||""),
+    status: STATUSES.some(function(s){ return s.key===t.status; }) ? t.status : "not_started",
+    notes: String(t.notes||""), deleted: !!t.deleted,
+    updatedAt: parseInt(t.updatedAt,10) || Date.now()
+  };
+}
 function applyImport(data){
   var maxId = 0;
   var tasks = data.tasks.map(function(t){
-    var id = parseInt(t.id,10) || 0;
-    maxId = Math.max(maxId, id);
-    return {
-      id: id, ws: parseInt(t.ws,10) || 1, num: String(t.num||""),
-      name: String(t.name||""), owner: String(t.owner||""),
-      signoff: String(t.signoff||""), informed: String(t.informed||""),
-      due: String(t.due||""),
-      status: STATUSES.some(function(s){ return s.key===t.status; }) ? t.status : "not_started",
-      notes: String(t.notes||""), deleted: false
-    };
+    var n = normalizeTask(t);
+    maxId = Math.max(maxId, n.id);
+    return n;
   });
-  tasks.forEach(function(t,i){ if(!t.id) t.id = ++maxId; });
+  tasks.forEach(function(t){ if(!t.id) t.id = ++maxId; });
   state.tasks = tasks;
   state.nextId = Math.max(maxId+1, parseInt(data.nextId,10)||0, 1);
   persist();
   render();
+}
+function adoptSyncFrom(data){
+  if(data.sync && data.sync.url && data.sync.url !== (state.sync && state.sync.url)){
+    state.sync = { url: String(data.sync.url) };
+    persist(false);
+    connectSync();
+    toast("Live sync joined automatically — you now see everyone's updates.", null, null, 4500);
+  }
 }
 
 function b64urlEncode(str){
@@ -1014,7 +1140,11 @@ function b64urlDecode(str){
   return decodeURIComponent(escape(atob(str)));
 }
 function shareLink(){
-  var payload = JSON.stringify({ app:"smf_sd_tracker", version:1, nextId:state.nextId, tasks:liveTasks() });
+  var payload = JSON.stringify({
+    app:"smf_sd_tracker", version:1, nextId:state.nextId,
+    sync: (state.sync && state.sync.url) ? { url: state.sync.url } : undefined,
+    tasks:liveTasks()
+  });
   var base = location.href.split("#")[0];
   return base + "#data=" + b64urlEncode(payload);
 }
@@ -1040,6 +1170,173 @@ function copyText(text, okMsg){
   }else fallback();
 }
 
+/* ---------- live sync (Firebase Realtime Database over REST + SSE) ----------
+   Local-first: localStorage stays the source of truth on this device.
+   When a database URL is configured we PUT the whole document on every
+   change (debounced) and listen via EventSource for everyone else's PUTs.
+   Conflicts resolve per task: the newer updatedAt wins. */
+var clientId = Math.random().toString(36).slice(2) + Date.now().toString(36);
+var es = null, pushTimer = null, retryTimer = null;
+var syncStatus = "local"; // local | connecting | live | offline
+
+function syncDocUrl(){
+  var u = (state.sync && state.sync.url || "").trim();
+  if(!u) return null;
+  u = u.replace(/\/+$/,"").replace(/\.json$/,"");
+  try{
+    var p = new URL(u);
+    if(p.protocol !== "https:") return null;
+    if(p.pathname === "" || p.pathname === "/") u += "/smf_sd_tracker";
+  }catch(e){ return null; }
+  return u + ".json";
+}
+function setSyncStatus(s){
+  if(syncStatus === s) return;
+  syncStatus = s;
+  renderSyncPill();
+}
+function renderSyncPill(){
+  var map = {
+    local:      ["local",      "Local only"],
+    connecting: ["connecting", "Connecting…"],
+    live:       ["live",       "Live sync on"],
+    offline:    ["offline",    "Sync offline — saving here"]
+  };
+  var m = map[syncStatus] || map.local;
+  $("syncPill").className = "sync-pill " + m[0];
+  $("syncPillText").textContent = m[1];
+}
+function disconnectSync(){
+  if(es){ es.close(); es = null; }
+  clearTimeout(pushTimer);
+  clearTimeout(retryTimer);
+}
+function connectSync(){
+  disconnectSync();
+  var url = syncDocUrl();
+  if(!url){ setSyncStatus("local"); return; }
+  setSyncStatus("connecting");
+  try{ es = new EventSource(url); }
+  catch(e){ setSyncStatus("offline"); return; }
+  es.addEventListener("put", function(ev){
+    setSyncStatus("live");
+    var msg; try{ msg = JSON.parse(ev.data); }catch(e){ return; }
+    if(!msg) return;
+    if(msg.path === "/"){
+      if(msg.data == null){ schedulePush(); }   // empty database: seed it with our data
+      else applyRemote(msg.data);
+    }else{
+      refetchRemote();
+    }
+  });
+  es.addEventListener("patch", refetchRemote);
+  es.onerror = function(){
+    // EventSource retries automatically; show the user we're degraded.
+    if(syncStatus !== "local") setSyncStatus("offline");
+  };
+}
+function refetchRemote(){
+  var url = syncDocUrl(); if(!url) return;
+  fetch(url).then(function(r){ return r.json(); }).then(function(d){ if(d) applyRemote(d); })
+    .catch(function(){ setSyncStatus("offline"); });
+}
+function applyRemote(doc){
+  if(!doc || doc.clientId === clientId) return;  // our own echo
+  var remoteTasks = Array.isArray(doc.tasks) ? doc.tasks
+                  : (doc.tasks && typeof doc.tasks === "object") ? Object.keys(doc.tasks).map(function(k){ return doc.tasks[k]; })
+                  : [];
+  var changed = false, needPush = false;
+  var byId = {};
+  state.tasks.forEach(function(t){ byId[t.id] = t; });
+  var remoteIds = {};
+  remoteTasks.forEach(function(raw){
+    if(!raw) return;
+    var rt = normalizeTask(raw);
+    remoteIds[rt.id] = true;
+    var lt = byId[rt.id];
+    if(!lt){
+      state.tasks.push(rt);
+      changed = true;
+    }else if(rt.updatedAt > (lt.updatedAt||0)){
+      for(var k in rt) lt[k] = rt[k];
+      changed = true;
+    }else if(rt.updatedAt < (lt.updatedAt||0)){
+      needPush = true;  // we hold the newer version of this task
+    }
+  });
+  state.tasks.forEach(function(t){ if(!remoteIds[t.id]) needPush = true; });
+  var rNext = parseInt(doc.nextId,10) || 0;
+  if(rNext > state.nextId){ state.nextId = rNext; changed = true; }
+  else if(rNext < state.nextId){ needPush = true; }
+  if(changed){
+    state.lastUpdated = Math.max(state.lastUpdated||0, parseInt(doc.lastUpdated,10)||0);
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
+    // Don't yank the keyboard away mid-edit; re-render once the field closes.
+    if(!document.querySelector(".edit-input, .status-select")) render();
+    else renderTimestamp();
+  }
+  if(needPush) schedulePush();
+}
+function schedulePush(){
+  if(!syncDocUrl()) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(pushNow, 500);
+}
+function pushNow(){
+  var url = syncDocUrl(); if(!url) return;
+  var body = JSON.stringify({
+    clientId: clientId,
+    lastUpdated: state.lastUpdated,
+    nextId: state.nextId,
+    tasks: state.tasks
+  });
+  fetch(url, { method:"PUT", body: body }).then(function(r){
+    if(r.ok){ setSyncStatus("live"); }
+    else{ setSyncStatus("offline"); retryPushLater(); }
+  }).catch(function(){
+    setSyncStatus("offline");
+    retryPushLater();
+  });
+}
+function retryPushLater(){
+  clearTimeout(retryTimer);
+  retryTimer = setTimeout(schedulePush, 5000);
+}
+window.addEventListener("online", function(){ if(syncDocUrl()){ connectSync(); schedulePush(); } });
+
+function openSyncModal(){
+  $("syncUrlInput").value = (state.sync && state.sync.url) || "";
+  openOverlay("syncOverlay");
+}
+$("syncPill").addEventListener("click", openSyncModal);
+$("btnSyncSetup").addEventListener("click", function(){
+  $("gearMenu").classList.remove("open");
+  openSyncModal();
+});
+$("btnSyncConnect").addEventListener("click", function(){
+  var u = $("syncUrlInput").value.trim();
+  if(!u){ toast("Paste the database URL first.", null, null, 3500); return; }
+  state.sync = { url: u };
+  if(!syncDocUrl()){
+    toast("That doesn't look like a valid https:// database URL.", null, null, 4000);
+    state.sync = { url: "" };
+    return;
+  }
+  persist(false);
+  closeOverlay("syncOverlay");
+  connectSync();
+  schedulePush();
+  toast("Live sync on. Now click “Copy share link” and send it to the team.", null, null, 5000);
+});
+$("btnSyncOff").addEventListener("click", function(){
+  state.sync = { url: "" };
+  persist(false);
+  disconnectSync();
+  setSyncStatus("local");
+  closeOverlay("syncOverlay");
+  toast("Live sync turned off. Data stays on this device only.", null, null, 3500);
+});
+
 /* ---------- print ---------- */
 $("btnPrint").addEventListener("click", function(){
   document.body.classList.add("print-preview");
@@ -1054,12 +1351,30 @@ $("btnGear").addEventListener("click", function(e){
   e.stopPropagation();
   $("gearMenu").classList.toggle("open");
 });
+$("btnDismissHelp").addEventListener("click", function(){
+  state.helpDismissed = true;
+  persist(false);
+  render();
+});
+$("btnShowHelp").addEventListener("click", function(){
+  $("gearMenu").classList.remove("open");
+  state.helpDismissed = false;
+  persist(false);
+  render();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
 $("btnReset").addEventListener("click", function(){
   $("gearMenu").classList.remove("open");
-  if(!confirm("Reset the tracker?\n\nThis deletes ALL changes on this device and restores the original task list. This cannot be undone.")) return;
+  var syncOn = !!syncDocUrl();
+  var msg = "Reset the tracker?\n\nThis deletes ALL changes and restores the original task list."
+    + (syncOn ? "\n\nLive sync is ON — this resets the tracker for EVERYONE connected." : "")
+    + "\n\nThis cannot be undone.";
+  if(!confirm(msg)) return;
+  var keepSync = state.sync;
   localStorage.removeItem(LS_KEY);
   state = freshState();
-  persist(false);
+  state.sync = keepSync;
+  persist();
   render();
   toast("Tracker reset to the original task list.", null, null, 3500);
 });
@@ -1133,11 +1448,13 @@ load();
     if(data && Array.isArray(data.tasks)){
       if(confirm("This link carries shared tracker data ("+data.tasks.length+" tasks).\n\nLoad it? It will replace the data saved on this device.")){
         applyImport(data);
+        adoptSyncFrom(data);
       }
     }
   }
 })();
 render();
+if(syncDocUrl()) connectSync();
 
 })();
 </script>
