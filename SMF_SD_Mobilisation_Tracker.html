@@ -676,7 +676,7 @@
 
       <div class="tier-label">Project Chairperson</div>
       <div class="tier">
-        <div class="person-card"><span class="avatar av3">AR</span><span><span class="pname">Dr. Arjun Rangarajan</span><br><span class="prole">Project Chairperson</span></span></div>
+        <div class="person-card"><span class="avatar av3">AR</span><span><span class="pname">Dr. Arjun Rangarajan</span><br><span class="prole">Director · JMT · Project Chairperson</span></span></div>
       </div>
       <div class="tier-link"></div>
 
@@ -849,8 +849,7 @@ var WS_COLORS = { 1:"#0F6E56", 2:"#1B5FAB", 3:"#7C3AED", 4:"#B45309", 5:"#BE185D
 
 /* Ordered by project hierarchy */
 var STAKEHOLDERS = [
-  { name:"Dr. Arjun Rangarajan — Project Chairperson", re:/arjun/i },
-  { name:"Director",                                   re:/director/i },
+  { name:"Dr. Arjun Rangarajan — Director / JMT / Project Chairperson", re:/arjun|director|\bjmt\b/i },
   { name:"Mr. Alex — Project Head",                    re:/\balex\b/i },
   { name:"Dr. Sindhuja — Project Advisor",             re:/sindhuja/i },
   { name:"Ms. Vamci — Project Advisor",                re:/vamci/i },
@@ -861,7 +860,7 @@ var STAKEHOLDERS = [
   { name:"HR Team",                                    re:/\bhr\b/i },
   { name:"Ms. Sandhya — SD TL (OP)",                   re:/sandhya|op sd tl/i },
   { name:"Ms. Chitra — SD TL (IP)",                    re:/chitra|ip sd tl/i },
-  { name:"JMT / Department HODs",                      re:/\bjmt\b|\bhods?\b/i }
+  { name:"Department HODs",                            re:/\bhods?\b/i }
 ];
 
 function isoOffset(days){
@@ -1139,7 +1138,8 @@ function taskPassesFilter(t){
     if(f.owner.indexOf("st:")===0){
       var name = f.owner.slice(3), st = null;
       for(var i=0;i<STAKEHOLDERS.length;i++){ if(STAKEHOLDERS[i].name===name){ st=STAKEHOLDERS[i]; break; } }
-      if(!st || !st.re.test(t.owner||"")) return false;
+      // st missing = saved filter predates a stakeholder rename: show everything
+      if(st && !st.re.test(t.owner||"")) return false;
     }else if(f.owner.indexOf("raw:")===0){
       if((t.owner||"").trim() !== f.owner.slice(4)) return false;
     }
