@@ -294,6 +294,12 @@
     padding:7px 12px;color:var(--text-soft);width:100%;text-align:left;transition:all .12s;
   }
   .add-task-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-soft);}
+  .add-ws-btn{
+    background:#fff;border:1px dashed var(--gray-border);border-radius:12px;
+    padding:13px 16px;color:var(--text-soft);width:100%;text-align:center;
+    font-weight:600;margin-bottom:14px;transition:all .12s;box-shadow:var(--shadow-sm);
+  }
+  .add-ws-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-soft);}
   .empty-msg{padding:14px 16px;color:var(--text-soft);font-size:13px;}
 
   /* ---------- Who does what ---------- */
@@ -783,6 +789,15 @@ var WORKSTREAMS = [
   { id:5, name:"Communication & Governance" }
 ];
 var WS_COLORS = { 1:"#0F6E56", 2:"#1B5FAB", 3:"#7C3AED", 4:"#B45309", 5:"#BE185D" };
+var WS_PALETTE = ["#0F6E56","#1B5FAB","#7C3AED","#B45309","#BE185D","#0E7490","#4D7C0F","#9333EA","#C2410C","#0369A1"];
+function wsColor(id){ return WS_COLORS[id] || WS_PALETTE[(id-1) % WS_PALETTE.length]; }
+/* Built-in workstreams plus any the team has added (customWs lives in state
+   and syncs to everyone like tasks do). */
+function allWs(){ return WORKSTREAMS.concat(state && state.customWs || []); }
+function normalizeWsEntry(w){
+  if(!w || !parseInt(w.id,10)) return null;
+  return { id: parseInt(w.id,10), name: String(w.name||"Workstream"), updatedAt: parseInt(w.updatedAt,10)||0 };
+}
 
 /* Ordered by project hierarchy */
 var STAKEHOLDERS = [
@@ -862,6 +877,7 @@ function freshState(){
     collapsed: {},
     raciCollapsed: false,
     helpDismissed: false,
+    customWs: [],
     view: "tasks",
     sync: { url:"" }
   };
@@ -888,6 +904,7 @@ function load(){
         for(var k in d){ if(!(k in s)) s[k] = d[k]; }
         if(!s.filters) s.filters = { ws:"all", status:"all", owner:"all" };
         if(!s.sync || typeof s.sync.url !== "string") s.sync = { url:"" };
+        s.customWs = (Array.isArray(s.customWs) ? s.customWs : []).map(normalizeWsEntry).filter(Boolean);
         if(s.view !== "dash") s.view = "tasks";
         s.tasks.forEach(function(t){
           if(t.consulted == null) t.consulted = "";
@@ -922,6 +939,7 @@ function load(){
     state.tasks.forEach(function(t){ if(!t.id) t.id = ++maxId; });
     state.nextId = Math.max(maxId+1, parseInt(boot.nextId,10)||0, 1);
     if(boot.sync && boot.sync.url) state.sync = { url:String(boot.sync.url) };
+    if(Array.isArray(boot.customWs)) state.customWs = boot.customWs.map(normalizeWsEntry).filter(Boolean);
     persist(false);
     return;
   }
@@ -949,6 +967,21 @@ function esc(s){
     .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 }
 function liveTasks(){ return state.tasks.filter(function(t){ return !t.deleted; }); }
+
+/* ---------- automatic task numbering ----------
+   The stored num is only a stable ordering key; the number people see is
+   computed from the task's position among the live tasks of its workstream,
+   so deleting a task closes the gap (3.8, 3.10 shows as 3.8, 3.9). */
+function numKey(t){ var m = /^\d+\.(\d+)/.exec(t.num||""); return m ? parseInt(m[1],10) : 1e9; }
+function wsTasks(wsId){
+  return liveTasks().filter(function(t){ return t.ws===wsId; })
+    .sort(function(a,b){ return numKey(a)-numKey(b) || a.id-b.id; });
+}
+function taskNum(t){
+  var list = wsTasks(t.ws);
+  for(var i=0;i<list.length;i++){ if(list[i].id===t.id) return t.ws+"."+(i+1); }
+  return t.ws+".–";
+}
 function findTask(id){
   for(var i=0;i<state.tasks.length;i++){ if(state.tasks[i].id===id) return state.tasks[i]; }
   return null;
@@ -1049,7 +1082,7 @@ function ownerOptions(){
 function renderFilters(){
   var f = state.filters;
   var wsSel = '<option value="all">All workstreams</option>';
-  WORKSTREAMS.forEach(function(w){
+  allWs().forEach(function(w){
     wsSel += '<option value="'+w.id+'"'+(String(f.ws)===String(w.id)?" selected":"")+'>'+w.id+' — '+esc(w.name)+'</option>';
   });
   $("fWs").innerHTML = wsSel;
@@ -1111,14 +1144,15 @@ function dueCell(t){
 }
 function renderWorkstreams(){
   var html = "";
-  WORKSTREAMS.forEach(function(w){
-    var all = liveTasks().filter(function(t){ return t.ws===w.id; });
+  allWs().forEach(function(w){
+    var all = wsTasks(w.id);
     var shown = all.filter(taskPassesFilter);
     var doneCount = all.filter(function(t){ return t.status==="done"; }).length;
     var pct = all.length ? Math.round(doneCount/all.length*100) : 0;
     var rag = wsRag(all);
     var collapsed = !!state.collapsed[w.id];
-    html += '<div class="ws'+(collapsed?" collapsed":"")+'" data-ws="'+w.id+'">';
+    html += '<div class="ws'+(collapsed?" collapsed":"")+'" data-ws="'+w.id+'"'+
+      (WS_COLORS[w.id] ? '' : ' style="--wsac:'+wsColor(w.id)+'"')+'>';
     html += '<div class="ws-head" data-act="toggle-ws" data-ws="'+w.id+'">'+
       '<svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>'+
       '<h2><span class="ws-dot"></span>Workstream '+w.id+' — '+esc(w.name)+'</h2>'+
@@ -1135,7 +1169,7 @@ function renderWorkstreams(){
         '<div>Status</div><div title="Click the chip to pick a date">Due</div><div>Notes</div><div></div></div>';
       shown.forEach(function(t){
         html += '<div class="task-row" data-id="'+t.id+'">'+
-          '<div class="tnum">'+esc(t.num)+'</div>'+
+          '<div class="tnum">'+esc(taskNum(t))+'</div>'+
           '<div class="tname'+(t.status==="done"?" done-task":"")+'"><span class="cell-label">Task</span>'+editableCell(t,"name")+'</div>'+
           '<div class="towner"><span class="cell-label">Doing it</span>'+editableCell(t,"owner")+'</div>'+
           '<div class="tsigns"><span class="cell-label">Signs off</span>'+editableCell(t,"signoff","people")+'</div>'+
@@ -1159,6 +1193,7 @@ function renderWorkstreams(){
     html += '<div class="ws-foot"><button class="add-task-btn" data-act="add-task" data-ws="'+w.id+'">+ Add a task to this workstream</button></div>';
     html += '</div></div>';
   });
+  html += '<button class="add-ws-btn" data-act="add-ws">+ Add a new workstream</button>';
   $("workstreams").innerHTML = html;
 }
 
@@ -1178,12 +1213,12 @@ function renderRaci(){
     });
   });
   var html = '<table class="raci"><thead><tr><th>Person / team</th>';
-  WORKSTREAMS.forEach(function(w){ html += '<th>WS '+w.id+'<br><span style="font-weight:400;font-size:11px">'+esc(w.name)+'</span></th>'; });
+  allWs().forEach(function(w){ html += '<th>WS '+w.id+'<br><span style="font-weight:400;font-size:11px">'+esc(w.name)+'</span></th>'; });
   html += '</tr></thead><tbody>';
   STAKEHOLDERS.forEach(function(st){
     var any = false;
     var row = '<tr><th>'+esc(st.name)+'</th>';
-    WORKSTREAMS.forEach(function(w){
+    allWs().forEach(function(w){
       var c = map[st.name][w.id] || {};
       var parts = [];
       if(c.doing) parts.push('<span class="role doing">Doing it</span>');
@@ -1264,14 +1299,14 @@ function renderDashboard(){
 
   /* workstream health */
   html += '<div class="panel"><h3>Workstream health</h3>';
-  WORKSTREAMS.forEach(function(w){
+  allWs().forEach(function(w){
     var wt = tasks.filter(function(t){ return t.ws===w.id; });
     var dn = wt.filter(function(t){ return t.status==="done"; }).length;
     var wpct = wt.length ? Math.round(dn/wt.length*100) : 0;
     var rag = wsRag(wt);
     var od = wt.filter(function(t){ return dueInfo(t).code==="overdue"; }).length;
     html += '<div class="wsh-row">'+
-      '<span class="nm"><span class="ws-dot" style="background:'+WS_COLORS[w.id]+'"></span>'+esc(w.name)+
+      '<span class="nm"><span class="ws-dot" style="background:'+wsColor(w.id)+'"></span>'+esc(w.name)+
         (od ? ' <span style="color:var(--rag-red);font-weight:600;font-size:11px">· '+od+' overdue</span>' : '')+'</span>'+
       '<div class="progress"><i style="width:'+wpct+'%"></i></div>'+
       '<span class="frac">'+dn+'/'+wt.length+'</span>'+
@@ -1293,7 +1328,7 @@ function renderDashboard(){
     (attn.length ? ' <span class="count-chip" style="background:var(--rag-red-bg);color:var(--rag-red)">'+attn.length+'</span>' : '')+'</h3>';
   if(attn.length){
     attn.slice(0,10).forEach(function(a){
-      html += '<div class="attn-item '+a.cls+'"><span class="anum">'+esc(a.t.num)+'</span>'+
+      html += '<div class="attn-item '+a.cls+'"><span class="anum">'+esc(taskNum(a.t))+'</span>'+
         '<span style="min-width:0">'+esc(a.t.name)+
         '<span class="ameta">'+esc(a.t.owner||"no owner")+(a.t.due ? ' · due '+esc(fmtDueDate(a.t.due)) : '')+'</span></span>'+
         '<span class="awhy">'+esc(a.why)+'</span></div>';
@@ -1311,7 +1346,7 @@ function renderDashboard(){
   if(next7.length){
     next7.slice(0,10).forEach(function(o){
       var lbl = o.di.days===0 ? "today" : o.di.days===1 ? "tomorrow" : "in "+o.di.days+" days";
-      html += '<div class="attn-item amber"><span class="anum">'+esc(o.t.num)+'</span>'+
+      html += '<div class="attn-item amber"><span class="anum">'+esc(taskNum(o.t))+'</span>'+
         '<span style="min-width:0">'+esc(o.t.name)+
         '<span class="ameta">'+esc(o.t.owner||"no owner")+' · '+esc(fmtDueDate(o.t.due))+'</span></span>'+
         '<span class="awhy">'+lbl+'</span></div>';
@@ -1471,6 +1506,18 @@ function addTask(wsId){
   pendingEdit = { id:t.id, field:"name" };
   render();
 }
+function addWorkstream(){
+  var name = prompt("Name the new workstream:");
+  if(name == null) return;
+  name = name.trim();
+  if(!name){ toast("The workstream needs a name.", null, null, 3500); return; }
+  var maxId = 0;
+  allWs().forEach(function(w){ maxId = Math.max(maxId, w.id); });
+  state.customWs.push({ id: maxId+1, name: name, updatedAt: Date.now() });
+  persist();
+  render();
+  toast('Workstream '+(maxId+1)+' — "'+name+'" added. It syncs to the whole team.', null, null, 4500);
+}
 function deleteTask(id){
   var t = findTask(id); if(!t) return;
   // Deleted tasks stay as hidden tombstones so the deletion also
@@ -1492,7 +1539,7 @@ var editModalTaskId = null;
 function openEditModal(id){
   var t = findTask(id); if(!t) return;
   editModalTaskId = id;
-  $("editModalTitle").textContent = "Edit task " + t.num;
+  $("editModalTitle").textContent = "Edit task " + taskNum(t);
   $("emName").value = t.name||"";
   $("emOwner").value = t.owner||"";
   $("emSignoff").value = t.signoff||"";
@@ -1548,6 +1595,7 @@ function exportPayload(){
     app: "smf_sd_tracker", version: 2,
     exportedAt: new Date().toISOString(),
     nextId: state.nextId,
+    customWs: state.customWs,
     sync: (state.sync && state.sync.url) ? { url: state.sync.url } : undefined,
     tasks: liveTasks()
   }, null, 2);
@@ -1613,6 +1661,7 @@ function applyImport(data){
   });
   tasks.forEach(function(t){ if(!t.id) t.id = ++maxId; });
   state.tasks = tasks;
+  if(Array.isArray(data.customWs)) state.customWs = data.customWs.map(normalizeWsEntry).filter(Boolean);
   state.nextId = Math.max(maxId+1, parseInt(data.nextId,10)||0, 1);
   persist();
   render();
@@ -1648,6 +1697,7 @@ function shareLink(){
   }
   var payload = JSON.stringify({
     app:"smf_sd_tracker", version:2, nextId:state.nextId,
+    customWs: state.customWs,
     tasks:liveTasks()
   });
   return base + "#data=" + b64urlEncode(payload);
@@ -1668,6 +1718,7 @@ function shareCopyHtml(){
   var payload = JSON.stringify({
     app: "smf_sd_tracker", version: 2,
     nextId: state.nextId,
+    customWs: state.customWs,
     sync: (state.sync && state.sync.url) ? { url: state.sync.url } : undefined,
     tasks: liveTasks()
   }).replace(/<\//g, "<\\/");
@@ -1828,6 +1879,23 @@ function applyRemote(doc){
     }
   });
   state.tasks.forEach(function(t){ if(!remoteIds[t.id]) needPush = true; });
+  /* custom workstreams merge the same way tasks do: newer updatedAt wins */
+  var remoteWs = Array.isArray(doc.customWs) ? doc.customWs
+               : (doc.customWs && typeof doc.customWs === "object") ? Object.keys(doc.customWs).map(function(k){ return doc.customWs[k]; })
+               : [];
+  var wsById = {};
+  state.customWs.forEach(function(w){ wsById[w.id] = w; });
+  var remoteWsIds = {};
+  remoteWs.forEach(function(raw){
+    var rw = normalizeWsEntry(raw);
+    if(!rw) return;
+    remoteWsIds[rw.id] = true;
+    var lw = wsById[rw.id];
+    if(!lw){ state.customWs.push(rw); changed = true; }
+    else if(rw.updatedAt > (lw.updatedAt||0)){ lw.name = rw.name; lw.updatedAt = rw.updatedAt; changed = true; }
+    else if(rw.updatedAt < (lw.updatedAt||0)){ needPush = true; }
+  });
+  state.customWs.forEach(function(w){ if(!remoteWsIds[w.id]) needPush = true; });
   var rNext = parseInt(doc.nextId,10) || 0;
   if(rNext > state.nextId){ state.nextId = rNext; changed = true; }
   else if(rNext < state.nextId){ needPush = true; }
@@ -1851,6 +1919,7 @@ function pushNow(){
     clientId: clientId,
     lastUpdated: state.lastUpdated,
     nextId: state.nextId,
+    customWs: state.customWs,
     tasks: state.tasks
   });
   fetch(url, { method:"PUT", body: body }).then(function(r){
@@ -2002,6 +2071,8 @@ document.addEventListener("click", function(e){
     deleteTask(parseInt(el.dataset.id,10));
   }else if(act==="add-task"){
     addTask(parseInt(el.dataset.ws,10));
+  }else if(act==="add-ws"){
+    addWorkstream();
   }
 });
 $("raciHead").addEventListener("click", function(){
