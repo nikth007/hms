@@ -68,6 +68,7 @@
     transition:border-color .12s,color .12s,box-shadow .12s;
   }
   .btn:hover{border-color:var(--teal);color:var(--teal);box-shadow:var(--shadow-sm);}
+  .btn:disabled{opacity:.45;pointer-events:none;}
   .btn-primary{background:var(--teal);border-color:var(--teal);color:#fff;}
   .btn-primary:hover{background:#0c5a46;color:#fff;}
   .btn svg{width:14px;height:14px;}
@@ -195,6 +196,11 @@
   .ws-head .chev{transition:transform .15s;color:var(--text-soft);flex-shrink:0;}
   .ws.collapsed .ws-head .chev{transform:rotate(-90deg);}
   .ws-head h2{font-size:14.5px;font-weight:600;flex:1;min-width:200px;}
+  .ws-edit-btn{
+    background:none;border:none;color:var(--text-soft);font-size:13px;
+    padding:2px 7px;border-radius:6px;cursor:pointer;flex-shrink:0;
+  }
+  .ws-edit-btn:hover{color:var(--teal);background:var(--teal-soft);}
   .ws-head h2 .ws-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--wsac);margin-right:7px;vertical-align:1px;}
   .ws-progress{width:110px;height:7px;background:var(--gray-badge);border-radius:5px;overflow:hidden;flex-shrink:0;}
   .ws-progress i{display:block;height:100%;background:var(--rag-green);border-radius:5px;transition:width .3s;}
@@ -520,7 +526,7 @@
     body{background:#fff;font-size:11px;}
     .topbar .btn,.gear-wrap,.filters,.dots-btn,.add-task-btn,.ws-foot,
     .ws-head .chev,.toast-wrap,.overlay,.sync-pill,.help-banner,.tabbar,
-    .legend-strip,.dash-note{display:none !important;}
+    .legend-strip,.dash-note,.ws-edit-btn,.add-ws-btn{display:none !important;}
     .task-grid-head,.task-row{min-width:0;gap:6px;padding:6px 8px;}
     .ws-body{overflow:visible;}
     .topbar{position:static;border-bottom:2px solid var(--teal);box-shadow:none;}
@@ -553,6 +559,18 @@
   </div>
   <span class="spacer"></span>
   <div class="actions">
+  <button class="btn" id="btnUndo" disabled title="Undo the last change (Ctrl+Z)">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5.5 3 2.5 6l3 3M2.5 6H10a3.5 3.5 0 0 1 0 7H7"/></svg>
+    Undo
+  </button>
+  <button class="btn" id="btnRedo" disabled title="Redo (Ctrl+Y)">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10.5 3l3 3-3 3M13.5 6H6a3.5 3.5 0 0 0 0 7h3"/></svg>
+    Redo
+  </button>
+  <button class="btn" id="btnExcel" title="Download the whole tracker as an Excel file">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 2.5h11v11h-11zM2.5 6h11M2.5 9.5h11M6 6v7.5"/></svg>
+    Download Excel
+  </button>
   <button class="btn" id="btnShareLink" title="Copy a link that carries all current data">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6.5 9.5 9.5 6.5M5 11l-1.5 1.5a2.5 2.5 0 0 1-3.5-3.5L2.5 7M11 5l1.5-1.5a2.5 2.5 0 0 1 3.5 3.5L13.5 9" transform="scale(.9) translate(.5 .5)"/></svg>
     Copy share link
@@ -791,12 +809,22 @@ var WORKSTREAMS = [
 var WS_COLORS = { 1:"#0F6E56", 2:"#1B5FAB", 3:"#7C3AED", 4:"#B45309", 5:"#BE185D" };
 var WS_PALETTE = ["#0F6E56","#1B5FAB","#7C3AED","#B45309","#BE185D","#0E7490","#4D7C0F","#9333EA","#C2410C","#0369A1"];
 function wsColor(id){ return WS_COLORS[id] || WS_PALETTE[(id-1) % WS_PALETTE.length]; }
-/* Built-in workstreams plus any the team has added (customWs lives in state
-   and syncs to everyone like tasks do). */
-function allWs(){ return WORKSTREAMS.concat(state && state.customWs || []); }
+/* Built-in workstreams plus any the team has added. customWs lives in state
+   and syncs to everyone like tasks do; an entry whose id matches a built-in
+   workstream acts as a rename of that workstream. */
+function allWs(){
+  var custom = state && state.customWs || [];
+  var byId = {};
+  custom.forEach(function(w){ byId[w.id] = w; });
+  var list = WORKSTREAMS.map(function(w){ return byId[w.id] ? { id:w.id, name:byId[w.id].name } : w; });
+  custom.forEach(function(w){
+    if(!w.deleted && !WORKSTREAMS.some(function(b){ return b.id===w.id; })) list.push(w);
+  });
+  return list;
+}
 function normalizeWsEntry(w){
   if(!w || !parseInt(w.id,10)) return null;
-  return { id: parseInt(w.id,10), name: String(w.name||"Workstream"), updatedAt: parseInt(w.updatedAt,10)||0 };
+  return { id: parseInt(w.id,10), name: String(w.name||"Workstream"), deleted: !!w.deleted, updatedAt: parseInt(w.updatedAt,10)||0 };
 }
 
 /* Ordered by project hierarchy */
@@ -1156,6 +1184,7 @@ function renderWorkstreams(){
     html += '<div class="ws-head" data-act="toggle-ws" data-ws="'+w.id+'">'+
       '<svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>'+
       '<h2><span class="ws-dot"></span>Workstream '+w.id+' — '+esc(w.name)+'</h2>'+
+      '<button class="ws-edit-btn" data-act="rename-ws" data-ws="'+w.id+'" title="Rename this workstream">✎</button>'+
       '<span class="rag-chip '+rag.cls+'"><span class="dot"></span>'+rag.label+'</span>'+
       '<div class="ws-progress" title="'+pct+'% done"><i style="width:'+pct+'%"></i></div>'+
       '<span class="ws-count">'+doneCount+' of '+all.length+' done</span></div>';
@@ -1415,7 +1444,7 @@ function startInlineEdit(span){
     if(finished) return;
     finished = true;
     var v = input.value.trim();
-    if(v !== (t[field]||"")){ t[field] = v; t.updatedAt = Date.now(); persist(); }
+    if(v !== (t[field]||"")){ recordHistory(); t[field] = v; t.updatedAt = Date.now(); persist(); }
     if(nextField) pendingEdit = { id:id, field:nextField };
     render();
   }
@@ -1452,7 +1481,7 @@ function startDueEdit(el){
     if(finished) return;
     finished = true;
     var v = input.value;
-    if(v && v !== (t.due||"")){ t.due = v; t.updatedAt = Date.now(); persist(); }
+    if(v && v !== (t.due||"")){ recordHistory(); t.due = v; t.updatedAt = Date.now(); persist(); }
     render();
   }
   input.addEventListener("change", commit);
@@ -1478,7 +1507,7 @@ function startStatusEdit(badgeEl){
   badgeEl.parentNode.insertBefore(sel, badgeEl.nextSibling);
   sel.focus();
   function done(saveIt){
-    if(saveIt && sel.value !== t.status){ t.status = sel.value; t.updatedAt = Date.now(); persist(); }
+    if(saveIt && sel.value !== t.status){ recordHistory(); t.status = sel.value; t.updatedAt = Date.now(); persist(); }
     render();
   }
   sel.addEventListener("change", function(){ done(true); });
@@ -1486,8 +1515,91 @@ function startStatusEdit(badgeEl){
   sel.addEventListener("keydown", function(e){ if(e.key==="Escape") done(false); });
 }
 
+/* ---------- undo / redo ----------
+   In-memory snapshots of this device's own edits (synced changes from
+   teammates are never recorded, so undo won't surprise-revert their work
+   except where it overlapped the undone change). Restoring stamps changed
+   rows with a fresh updatedAt so the restore also wins over live sync. */
+var undoStack = [], redoStack = [], HISTORY_LIMIT = 50;
+var TASK_FIELDS = ["ws","num","name","owner","signoff","consulted","informed","due","dueHint","status","notes","deleted"];
+function historySnapshot(){
+  return JSON.stringify({ tasks: state.tasks, customWs: state.customWs, nextId: state.nextId });
+}
+function recordHistory(){
+  undoStack.push(historySnapshot());
+  if(undoStack.length > HISTORY_LIMIT) undoStack.shift();
+  redoStack.length = 0;
+  updateUndoButtons();
+}
+function applyHistorySnapshot(json){
+  var snap = JSON.parse(json), now = Date.now();
+  var byId = {}, snapIds = {};
+  state.tasks.forEach(function(t){ byId[t.id] = t; });
+  snap.tasks.forEach(function(st){
+    snapIds[st.id] = true;
+    var c = byId[st.id];
+    if(!c){ st.updatedAt = now; state.tasks.push(st); return; }
+    var diff = TASK_FIELDS.some(function(f){ return c[f] !== st[f]; });
+    if(diff){ TASK_FIELDS.forEach(function(f){ c[f] = st[f]; }); c.updatedAt = now; }
+  });
+  // Tasks created after the snapshot become tombstones so the removal syncs.
+  state.tasks.forEach(function(t){
+    if(!snapIds[t.id] && !t.deleted){ t.deleted = true; t.updatedAt = now; }
+  });
+  var wsById = {}, snapWsIds = {};
+  state.customWs.forEach(function(w){ wsById[w.id] = w; });
+  snap.customWs.forEach(function(sw){
+    snapWsIds[sw.id] = true;
+    var c = wsById[sw.id];
+    if(!c){ sw.updatedAt = now; state.customWs.push(sw); }
+    else if(c.name !== sw.name || !!c.deleted !== !!sw.deleted){
+      c.name = sw.name; c.deleted = !!sw.deleted; c.updatedAt = now;
+    }
+  });
+  // Workstream entries created after the snapshot: revert a built-in rename
+  // to its original name, tombstone an added workstream so the removal syncs.
+  state.customWs.forEach(function(w){
+    if(snapWsIds[w.id]) return;
+    var builtin = null;
+    WORKSTREAMS.forEach(function(b){ if(b.id===w.id) builtin = b; });
+    if(builtin){ if(w.name !== builtin.name){ w.name = builtin.name; w.updatedAt = now; } }
+    else if(!w.deleted){ w.deleted = true; w.updatedAt = now; }
+  });
+  state.nextId = Math.max(state.nextId, parseInt(snap.nextId,10)||1);
+  persist();
+  render();
+}
+function doUndo(){
+  if(!undoStack.length) return;
+  redoStack.push(historySnapshot());
+  applyHistorySnapshot(undoStack.pop());
+  updateUndoButtons();
+  toast("Undone.", null, null, 2000);
+}
+function doRedo(){
+  if(!redoStack.length) return;
+  undoStack.push(historySnapshot());
+  applyHistorySnapshot(redoStack.pop());
+  updateUndoButtons();
+  toast("Redone.", null, null, 2000);
+}
+function updateUndoButtons(){
+  $("btnUndo").disabled = !undoStack.length;
+  $("btnRedo").disabled = !redoStack.length;
+}
+$("btnUndo").addEventListener("click", doUndo);
+$("btnRedo").addEventListener("click", doRedo);
+document.addEventListener("keydown", function(e){
+  if(!(e.ctrlKey || e.metaKey)) return;
+  var tag = (document.activeElement && document.activeElement.tagName || "").toLowerCase();
+  if(tag==="input" || tag==="textarea" || tag==="select") return;  // native text undo
+  if(e.key==="z" || e.key==="Z"){ e.preventDefault(); if(e.shiftKey) doRedo(); else doUndo(); }
+  else if(e.key==="y" || e.key==="Y"){ e.preventDefault(); doRedo(); }
+});
+
 /* ---------- add / delete / undo ---------- */
 function addTask(wsId){
+  recordHistory();
   var minor = 0;
   state.tasks.forEach(function(t){
     if(t.ws===wsId){
@@ -1511,15 +1623,33 @@ function addWorkstream(){
   if(name == null) return;
   name = name.trim();
   if(!name){ toast("The workstream needs a name.", null, null, 3500); return; }
-  var maxId = 0;
-  allWs().forEach(function(w){ maxId = Math.max(maxId, w.id); });
-  state.customWs.push({ id: maxId+1, name: name, updatedAt: Date.now() });
+  recordHistory();
+  var maxId = 0;  // include tombstoned workstreams so ids are never reused
+  WORKSTREAMS.concat(state.customWs).forEach(function(w){ maxId = Math.max(maxId, w.id); });
+  state.customWs.push({ id: maxId+1, name: name, deleted: false, updatedAt: Date.now() });
   persist();
   render();
   toast('Workstream '+(maxId+1)+' — "'+name+'" added. It syncs to the whole team.', null, null, 4500);
 }
+function renameWorkstream(id){
+  var w = null;
+  allWs().forEach(function(x){ if(x.id===id) w = x; });
+  if(!w) return;
+  var name = prompt("Rename workstream "+id+":", w.name);
+  if(name == null) return;
+  name = name.trim();
+  if(!name || name === w.name) return;
+  recordHistory();
+  var entry = null;
+  state.customWs.forEach(function(x){ if(x.id===id) entry = x; });
+  if(entry){ entry.name = name; entry.updatedAt = Date.now(); }
+  else state.customWs.push({ id:id, name:name, deleted:false, updatedAt: Date.now() });
+  persist();
+  render();
+}
 function deleteTask(id){
   var t = findTask(id); if(!t) return;
+  recordHistory();
   // Deleted tasks stay as hidden tombstones so the deletion also
   // reaches other devices when live sync is on.
   t.deleted = true;
@@ -1527,6 +1657,7 @@ function deleteTask(id){
   persist();
   render();
   toast('Deleted "'+ (t.name.length>40 ? t.name.slice(0,40)+"…" : t.name) +'"', "Undo", function(){
+    recordHistory();
     t.deleted = false;
     t.updatedAt = Date.now();
     persist();
@@ -1564,6 +1695,7 @@ $("btnSaveEdit").addEventListener("click", function(){
     toast("Please pick a due date — every task needs one.", null, null, 3500);
     return;
   }
+  recordHistory();
   t.name = $("emName").value.trim();
   t.owner = $("emOwner").value.trim();
   t.signoff = $("emSignoff").value.trim();
@@ -1651,6 +1783,7 @@ function normalizeTask(t){
   };
 }
 function applyImport(data){
+  recordHistory();
   var maxId = 0;
   var tasks = data.tasks.map(function(t){
     var n = normalizeTask(t);
@@ -1712,6 +1845,120 @@ function decodeJoinFragment(link){
   if(!m) return null;
   return JSON.parse(b64urlDecode(m[1]));
 }
+
+/* ---------- Excel download ----------
+   Builds a genuine .xlsx with no libraries: an xlsx file is a zip of XML
+   parts, and zip entries can be "stored" (uncompressed), which only needs
+   a CRC32 — so the file opens cleanly in Excel and Google Sheets. */
+function crc32(bytes){
+  if(!crc32.table){
+    crc32.table = [];
+    for(var n=0;n<256;n++){
+      var c = n;
+      for(var k=0;k<8;k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      crc32.table[n] = c >>> 0;
+    }
+  }
+  var crc = 0xFFFFFFFF;
+  for(var i=0;i<bytes.length;i++) crc = (crc >>> 8) ^ crc32.table[(crc ^ bytes[i]) & 0xFF];
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+function zipU16(n){ return [n & 255, (n >> 8) & 255]; }
+function zipU32(n){ return [n & 255, (n >> 8) & 255, (n >> 16) & 255, (n >>> 24) & 255]; }
+function makeZip(files){
+  var enc = new TextEncoder();
+  var chunks = [], central = [], offset = 0, centralSize = 0;
+  files.forEach(function(f){
+    var nameB = enc.encode(f.name), data = enc.encode(f.text), crc = crc32(data);
+    // flag 0x0800 = UTF-8 names; method 0 = stored
+    var local = new Uint8Array([].concat(
+      zipU32(0x04034b50), zipU16(20), zipU16(0x0800), zipU16(0), zipU16(0), zipU16(0),
+      zipU32(crc), zipU32(data.length), zipU32(data.length), zipU16(nameB.length), zipU16(0)));
+    chunks.push(local, nameB, data);
+    central.push({ head: new Uint8Array([].concat(
+      zipU32(0x02014b50), zipU16(20), zipU16(20), zipU16(0x0800), zipU16(0), zipU16(0), zipU16(0),
+      zipU32(crc), zipU32(data.length), zipU32(data.length), zipU16(nameB.length),
+      zipU16(0), zipU16(0), zipU16(0), zipU16(0), zipU32(0), zipU32(offset))), name: nameB });
+    offset += local.length + nameB.length + data.length;
+  });
+  central.forEach(function(c){ chunks.push(c.head, c.name); centralSize += c.head.length + c.name.length; });
+  chunks.push(new Uint8Array([].concat(
+    zipU32(0x06054b50), zipU16(0), zipU16(0), zipU16(files.length), zipU16(files.length),
+    zipU32(centralSize), zipU32(offset), zipU16(0))));
+  return new Blob(chunks, { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+}
+function xmlEsc(s){
+  return String(s == null ? "" : s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,"");  // chars XML 1.0 forbids
+}
+function colLetter(i){
+  var s = ""; i++;
+  while(i){ var m = (i-1) % 26; s = String.fromCharCode(65+m) + s; i = (i-m-1) / 26; }
+  return s;
+}
+function buildXlsxBlob(){
+  var rows = [["No.","Workstream","Task","Doing it","Signs off","Needs to be asked","Gets update","Status","Due date","Timing note","Notes"]];
+  allWs().forEach(function(w){
+    wsTasks(w.id).forEach(function(t){
+      rows.push([ taskNum(t), "WS "+w.id+" — "+w.name, t.name, t.owner, t.signoff,
+                  t.consulted, t.informed, statusLabel(t.status), t.due||"", t.dueHint||"", t.notes||"" ]);
+    });
+  });
+  var widths = [7,28,52,22,22,24,24,16,12,18,40];
+  var cols = '<cols>' + widths.map(function(wd,i){
+    return '<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+wd+'" customWidth="1"/>';
+  }).join("") + '</cols>';
+  var body = rows.map(function(r,ri){
+    return '<row r="'+(ri+1)+'">' + r.map(function(v,ci){
+      return '<c r="'+colLetter(ci)+(ri+1)+'" t="inlineStr"'+(ri===0?' s="1"':'')+
+        '><is><t xml:space="preserve">'+xmlEsc(v)+'</t></is></c>';
+    }).join("") + '</row>';
+  }).join("");
+  var XMLH = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+  return makeZip([
+    { name:"[Content_Types].xml", text: XMLH +
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'+
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'+
+      '<Default Extension="xml" ContentType="application/xml"/>'+
+      '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+
+      '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'+
+      '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+
+      '</Types>' },
+    { name:"_rels/.rels", text: XMLH +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'+
+      '</Relationships>' },
+    { name:"xl/workbook.xml", text: XMLH +
+      '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'+
+      '<sheets><sheet name="Mobilisation Tracker" sheetId="1" r:id="rId1"/></sheets></workbook>' },
+    { name:"xl/_rels/workbook.xml.rels", text: XMLH +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'+
+      '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'+
+      '</Relationships>' },
+    { name:"xl/styles.xml", text: XMLH +
+      '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+      '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>'+
+      '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>'+
+      '<borders count="1"><border/></borders>'+
+      '<cellStyleXfs count="1"><xf/></cellStyleXfs>'+
+      '<cellXfs count="2"><xf xfId="0"/><xf xfId="0" fontId="1" applyFont="1"/></cellXfs>'+
+      '</styleSheet>' },
+    { name:"xl/worksheets/sheet1.xml", text: XMLH +
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+      cols + '<sheetData>' + body + '</sheetData></worksheet>' }
+  ]);
+}
+$("btnExcel").addEventListener("click", function(){
+  var blob = buildXlsxBlob();
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "SMF_SD_Mobilisation_Tracker_" + new Date().toISOString().slice(0,10) + ".xlsx";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  toast("Excel file downloaded — every workstream and task is in it.", null, null, 3500);
+});
 
 /* ---------- share dialog ---------- */
 function shareCopyHtml(){
@@ -1892,7 +2139,7 @@ function applyRemote(doc){
     remoteWsIds[rw.id] = true;
     var lw = wsById[rw.id];
     if(!lw){ state.customWs.push(rw); changed = true; }
-    else if(rw.updatedAt > (lw.updatedAt||0)){ lw.name = rw.name; lw.updatedAt = rw.updatedAt; changed = true; }
+    else if(rw.updatedAt > (lw.updatedAt||0)){ lw.name = rw.name; lw.deleted = rw.deleted; lw.updatedAt = rw.updatedAt; changed = true; }
     else if(rw.updatedAt < (lw.updatedAt||0)){ needPush = true; }
   });
   state.customWs.forEach(function(w){ if(!remoteWsIds[w.id]) needPush = true; });
@@ -2019,6 +2266,7 @@ $("btnReset").addEventListener("click", function(){
     + (syncOn ? "\n\nLive sync is ON — this resets the tracker for EVERYONE connected." : "")
     + "\n\nThis cannot be undone.";
   if(!confirm(msg)) return;
+  recordHistory();
   var keepSync = state.sync;
   localStorage.removeItem(LS_KEY);
   state = freshState();
@@ -2073,6 +2321,8 @@ document.addEventListener("click", function(e){
     addTask(parseInt(el.dataset.ws,10));
   }else if(act==="add-ws"){
     addWorkstream();
+  }else if(act==="rename-ws"){
+    renameWorkstream(parseInt(el.dataset.ws,10));
   }
 });
 $("raciHead").addEventListener("click", function(){
