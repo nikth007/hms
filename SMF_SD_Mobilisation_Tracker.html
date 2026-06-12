@@ -1,0 +1,2389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0F6E56">
+<title>SMF — Service Delivery Mobilisation Tracker</title>
+<style>
+  :root{
+    --teal:#0F6E56;
+    --teal-bright:#16916F;
+    --teal-soft:#E6F2EE;
+    --gray-bg:#F7F8F9;
+    --gray-border:#E3E6E8;
+    --text:#1F2933;
+    --text-soft:#5B6770;
+    --gray-badge:#EEF0F2;
+    --gray-badge-text:#5B6770;
+    --blue-badge:#E3EEFB;
+    --blue-badge-text:#1B5FAB;
+    --red-badge:#FDECE7;
+    --red-badge-text:#C04A1E;
+    --green-badge:#E4F3EA;
+    --green-badge-text:#1F7A43;
+    /* RAG palette */
+    --rag-red:#CC3E3E;
+    --rag-red-bg:#FCEAEA;
+    --rag-amber:#B45309;
+    --rag-amber-bg:#FCF1E0;
+    --rag-green:#1F7A43;
+    --rag-green-bg:#E4F3EA;
+    --shadow-sm:0 1px 2px rgba(16,24,40,.06);
+    --shadow-md:0 4px 14px rgba(16,24,40,.08);
+    /* workstream accents */
+    --ws1:#0F6E56; --ws2:#1B5FAB; --ws3:#7C3AED; --ws4:#B45309; --ws5:#BE185D;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(180deg,#EFF6F3 0%,var(--gray-bg) 260px);
+    color:var(--text);
+    font-size:14px;
+    line-height:1.45;
+    min-height:100vh;
+  }
+  button{font-family:inherit;font-size:13px;cursor:pointer;}
+  select,input,textarea{font-family:inherit;font-size:13px;color:var(--text);}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    background:#fff;border-bottom:1px solid var(--gray-border);
+    border-top:3px solid var(--teal);
+    padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    position:sticky;top:0;z-index:50;box-shadow:var(--shadow-sm);
+  }
+  .logo{
+    background:linear-gradient(135deg,var(--teal) 0%,var(--teal-bright) 100%);
+    color:#fff;font-weight:700;letter-spacing:1px;
+    padding:7px 11px;border-radius:9px;font-size:15px;
+    box-shadow:0 2px 6px rgba(15,110,86,.3);
+  }
+  .titleblock h1{font-size:17px;font-weight:650;}
+  .titleblock .updated{font-size:11.5px;color:var(--text-soft);}
+  .topbar .spacer{flex:1;}
+  .btn{
+    background:#fff;border:1px solid var(--gray-border);border-radius:8px;
+    padding:7px 12px;color:var(--text);display:inline-flex;align-items:center;gap:6px;
+    transition:border-color .12s,color .12s,box-shadow .12s;
+  }
+  .btn:hover{border-color:var(--teal);color:var(--teal);box-shadow:var(--shadow-sm);}
+  .btn:disabled{opacity:.45;pointer-events:none;}
+  .btn-primary{background:var(--teal);border-color:var(--teal);color:#fff;}
+  .btn-primary:hover{background:#0c5a46;color:#fff;}
+  .btn svg{width:14px;height:14px;}
+  .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .gear-wrap{position:relative;}
+  .gear-menu{
+    display:none;position:absolute;right:0;top:calc(100% + 6px);background:#fff;
+    border:1px solid var(--gray-border);border-radius:10px;box-shadow:var(--shadow-md);
+    min-width:210px;z-index:60;overflow:hidden;
+  }
+  .gear-menu.open{display:block;}
+  .gear-menu button{
+    display:block;width:100%;text-align:left;background:none;border:none;
+    padding:10px 14px;
+  }
+  .gear-menu button:hover{background:var(--gray-bg);}
+  .gear-menu .danger{color:#C04A1E;}
+
+  /* ---------- Sync status pill ---------- */
+  .sync-pill{
+    border:none;border-radius:20px;padding:2px 9px;font-size:11px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:5px;vertical-align:middle;margin-left:6px;
+  }
+  .sync-pill .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;}
+  .sync-pill.local{background:var(--gray-badge);color:var(--gray-badge-text);}
+  .sync-pill.live{background:var(--green-badge);color:var(--green-badge-text);}
+  .sync-pill.live .dot{animation:pulse 2s infinite;}
+  .sync-pill.offline,.sync-pill.connecting{background:#FFF3CD;color:#8A6D00;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .share-sec{margin-bottom:16px;}
+  .share-sec h4{font-size:13px;font-weight:600;margin-bottom:6px;}
+  .warn-box{
+    background:#FCF1E0;border:1px solid #E8CFA3;border-radius:8px;
+    padding:10px 12px;font-size:12.5px;color:#8A6D00;margin-bottom:14px;
+  }
+  .ok-box{
+    background:var(--rag-green-bg);border:1px solid #B9DCC8;border-radius:8px;
+    padding:10px 12px;font-size:12.5px;color:var(--rag-green);margin-bottom:14px;
+  }
+  .link-row{display:flex;gap:8px;}
+  .link-row input{flex:1;border:1px solid var(--gray-border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text-soft);min-width:0;}
+
+  /* ---------- Layout & tabs ---------- */
+  .wrap{max-width:1240px;margin:0 auto;padding:16px 20px 80px;}
+  .tabbar{display:flex;justify-content:center;margin-bottom:18px;}
+  .viewtabs{display:flex;gap:4px;background:#E5EBE9;padding:4px;border-radius:12px;box-shadow:inset 0 1px 2px rgba(0,0,0,.04);}
+  .viewtabs button{
+    border:none;background:transparent;padding:8px 20px;border-radius:9px;
+    font-weight:600;color:var(--text-soft);font-size:13.5px;transition:all .15s;
+  }
+  .viewtabs button.active{background:#fff;color:var(--teal);box-shadow:0 1px 4px rgba(0,0,0,.12);}
+
+  /* ---------- Summary strip ---------- */
+  .summary{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px;}
+  .stat{
+    background:#fff;border:1px solid var(--gray-border);border-radius:12px;
+    padding:12px 16px;box-shadow:var(--shadow-sm);border-left-width:4px;
+    transition:transform .12s,box-shadow .12s;
+  }
+  .stat:hover{transform:translateY(-1px);box-shadow:var(--shadow-md);}
+  .stat .num{font-size:24px;font-weight:700;}
+  .stat .lbl{font-size:12px;color:var(--text-soft);margin-top:2px;}
+  .stat.total{border-left-color:var(--teal);}        .stat.total .num{color:var(--teal);}
+  .stat.done{border-left-color:var(--rag-green);}    .stat.done .num{color:var(--rag-green);}
+  .stat.working{border-left-color:#1B5FAB;}          .stat.working .num{color:var(--blue-badge-text);}
+  .stat.stuck{border-left-color:var(--rag-red);}     .stat.stuck .num{color:var(--rag-red);}
+  .stat.notstarted{border-left-color:#9AA3AA;}       .stat.notstarted .num{color:var(--gray-badge-text);}
+
+  /* ---------- Filters ---------- */
+  .filters{
+    display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;
+    background:#fff;border:1px solid var(--gray-border);border-radius:12px;padding:10px 14px;
+    box-shadow:var(--shadow-sm);
+  }
+  .filters label{font-size:12px;color:var(--text-soft);}
+  .filters select{
+    border:1px solid var(--gray-border);border-radius:7px;padding:6px 8px;background:#fff;
+    max-width:240px;
+  }
+  .filters .clear-filters{margin-left:auto;background:none;border:none;color:var(--teal);font-size:12px;}
+  .filters .clear-filters:hover{text-decoration:underline;}
+
+  /* ---------- Help banner & legend strip ---------- */
+  .help-banner{
+    background:linear-gradient(135deg,#E6F2EE 0%,#EDF6F2 100%);
+    border:1px solid #BFDDD3;border-radius:12px;
+    padding:14px 16px;margin-bottom:14px;font-size:13px;
+    display:flex;gap:14px;align-items:flex-start;box-shadow:var(--shadow-sm);
+  }
+  .help-banner[hidden]{display:none;}
+  .help-banner ul{margin:8px 0 8px 18px;}
+  .help-banner li{margin-bottom:4px;}
+  .help-banner .dismiss{
+    background:var(--teal);border:none;color:#fff;border-radius:7px;
+    padding:7px 14px;flex-shrink:0;
+  }
+  .help-banner .dismiss:hover{background:#0c5a46;}
+  .legend-strip{
+    font-size:12px;color:var(--text-soft);margin-bottom:14px;
+    background:#fff;border:1px solid var(--gray-border);border-radius:10px;
+    padding:8px 14px;line-height:1.7;
+  }
+  .legend-strip b{color:var(--text);}
+  .legend-strip .lk-doing{color:var(--teal);} .legend-strip .lk-signs{color:var(--blue-badge-text);}
+  .legend-strip .lk-asked{color:#9A6700;}
+  .legend-strip .lnk{color:var(--teal);cursor:pointer;text-decoration:underline;}
+
+  /* ---------- Workstream panels ---------- */
+  .ws{
+    background:#fff;border:1px solid var(--gray-border);border-radius:12px;
+    margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-sm);
+    border-left:4px solid var(--wsac,var(--teal));
+  }
+  .ws[data-ws="1"]{--wsac:var(--ws1);} .ws[data-ws="2"]{--wsac:var(--ws2);}
+  .ws[data-ws="3"]{--wsac:var(--ws3);} .ws[data-ws="4"]{--wsac:var(--ws4);}
+  .ws[data-ws="5"]{--wsac:var(--ws5);}
+  .ws-head{
+    display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;
+    user-select:none;background:#fff;flex-wrap:wrap;
+  }
+  .ws-head:hover{background:#FBFCFC;}
+  .ws-head .chev{transition:transform .15s;color:var(--text-soft);flex-shrink:0;}
+  .ws.collapsed .ws-head .chev{transform:rotate(-90deg);}
+  .ws-head h2{font-size:14.5px;font-weight:600;flex:1;min-width:200px;}
+  .ws-edit-btn{
+    background:none;border:none;color:var(--text-soft);font-size:13px;
+    padding:2px 7px;border-radius:6px;cursor:pointer;flex-shrink:0;
+  }
+  .ws-edit-btn:hover{color:var(--teal);background:var(--teal-soft);}
+  .ws-head h2 .ws-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--wsac);margin-right:7px;vertical-align:1px;}
+  .ws-progress{width:110px;height:7px;background:var(--gray-badge);border-radius:5px;overflow:hidden;flex-shrink:0;}
+  .ws-progress i{display:block;height:100%;background:var(--rag-green);border-radius:5px;transition:width .3s;}
+  .ws-head .ws-count{font-size:12px;color:var(--text-soft);white-space:nowrap;}
+  .rag-chip{
+    display:inline-flex;align-items:center;gap:5px;border-radius:20px;
+    padding:2px 9px;font-size:11px;font-weight:600;white-space:nowrap;
+  }
+  .rag-chip .dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+  .rag-chip.red{background:var(--rag-red-bg);color:var(--rag-red);}
+  .rag-chip.amber{background:var(--rag-amber-bg);color:var(--rag-amber);}
+  .rag-chip.green{background:var(--rag-green-bg);color:var(--rag-green);}
+  .ws-body{border-top:1px solid var(--gray-border);overflow-x:auto;}
+  .ws.collapsed .ws-body{display:none;}
+
+  .task-grid-head,.task-row{
+    display:grid;
+    grid-template-columns:44px minmax(180px,1.5fr) 118px 108px 108px 118px 128px 110px minmax(130px,1fr) 30px;
+    gap:8px;align-items:start;padding:9px 16px;
+    min-width:1120px;
+  }
+  .task-grid-head{
+    font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-soft);
+    border-bottom:1px solid var(--gray-border);background:#FBFCFC;padding-top:7px;padding-bottom:7px;
+  }
+  .task-row{border-bottom:1px solid #F0F2F3;}
+  .task-row:last-child{border-bottom:none;}
+  .task-row:hover{background:#FBFCFC;}
+  .tnum{color:var(--text-soft);font-variant-numeric:tabular-nums;padding-top:2px;}
+  .cell-label{display:none;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-soft);margin-bottom:2px;}
+
+  .editable{border-radius:5px;padding:2px 5px;margin:-2px -5px;min-height:1.4em;cursor:text;display:block;}
+  .editable:hover{background:var(--teal-soft);outline:1px dashed rgba(15,110,86,.35);}
+  .editable:empty::before{content:"—";color:#B7BEC4;}
+  .edit-input{
+    width:100%;border:1px solid var(--teal);border-radius:5px;padding:3px 5px;
+    font-size:13px;background:#fff;outline:none;resize:vertical;
+  }
+  .tname.done-task .editable{text-decoration:line-through;color:var(--text-soft);}
+  .tnotes .editable{color:var(--text-soft);font-size:12.5px;}
+  .editable.people{font-size:12.5px;color:var(--text-soft);}
+  .towner .editable{color:var(--text);}
+
+  /* ---------- Due date chip (RAG coded) ---------- */
+  .due-chip{
+    display:inline-flex;align-items:center;gap:5px;border-radius:8px;
+    padding:3px 8px;font-size:12px;font-weight:600;cursor:pointer;
+    border:1px solid transparent;white-space:nowrap;
+  }
+  .due-chip svg{width:11px;height:11px;flex-shrink:0;}
+  .due-chip:hover{border-color:currentColor;}
+  .due-chip.rag-red{background:var(--rag-red-bg);color:var(--rag-red);}
+  .due-chip.rag-amber{background:var(--rag-amber-bg);color:var(--rag-amber);}
+  .due-chip.rag-green{background:var(--rag-green-bg);color:var(--rag-green);}
+  .due-chip.rag-done{background:var(--gray-badge);color:var(--gray-badge-text);font-weight:500;}
+  .due-chip.rag-none{background:#FFF8E8;color:#9A6700;border:1px dashed #D9B44A;font-weight:500;}
+  .due-when{display:block;font-size:10.5px;margin-top:3px;font-weight:600;}
+  .due-when.rag-red{color:var(--rag-red);} .due-when.rag-amber{color:var(--rag-amber);}
+  .due-when.rag-green{color:var(--rag-green);}
+  .due-hint{display:block;font-size:10.5px;color:var(--text-soft);margin-top:2px;font-style:italic;}
+  .edit-input.date{font-size:12px;padding:2px 4px;}
+
+  /* ---------- Status badges ---------- */
+  .badge{
+    display:inline-flex;align-items:center;gap:5px;border-radius:20px;
+    padding:3px 10px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;
+    border:1px solid transparent;
+  }
+  .badge svg{width:11px;height:11px;flex-shrink:0;}
+  .badge:hover{border-color:currentColor;}
+  .badge.not_started{background:var(--gray-badge);color:var(--gray-badge-text);}
+  .badge.working{background:var(--blue-badge);color:var(--blue-badge-text);}
+  .badge.stuck{background:var(--rag-red-bg);color:var(--rag-red);}
+  .badge.done{background:var(--rag-green-bg);color:var(--rag-green);}
+  .status-select{border:1px solid var(--teal);border-radius:6px;padding:3px 4px;max-width:100%;}
+
+  /* ---------- Row menu ---------- */
+  .row-menu-wrap{position:relative;justify-self:end;}
+  .dots-btn{
+    background:none;border:none;color:var(--text-soft);border-radius:5px;
+    padding:2px 6px;font-size:16px;line-height:1;letter-spacing:1px;
+  }
+  .dots-btn:hover{background:var(--gray-badge);color:var(--text);}
+  .row-menu{
+    display:none;position:absolute;right:0;top:calc(100% + 2px);background:#fff;
+    border:1px solid var(--gray-border);border-radius:8px;box-shadow:var(--shadow-md);
+    min-width:170px;z-index:40;overflow:hidden;
+  }
+  .row-menu.open{display:block;}
+  .row-menu button{display:block;width:100%;text-align:left;background:none;border:none;padding:9px 13px;}
+  .row-menu button:hover{background:var(--gray-bg);}
+  .row-menu .danger{color:#C04A1E;}
+
+  .ws-foot{padding:10px 16px;border-top:1px solid #F0F2F3;}
+  .add-task-btn{
+    background:none;border:1px dashed var(--gray-border);border-radius:8px;
+    padding:7px 12px;color:var(--text-soft);width:100%;text-align:left;transition:all .12s;
+  }
+  .add-task-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-soft);}
+  .add-ws-btn{
+    background:#fff;border:1px dashed var(--gray-border);border-radius:12px;
+    padding:13px 16px;color:var(--text-soft);width:100%;text-align:center;
+    font-weight:600;margin-bottom:14px;transition:all .12s;box-shadow:var(--shadow-sm);
+  }
+  .add-ws-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-soft);}
+  .empty-msg{padding:14px 16px;color:var(--text-soft);font-size:13px;}
+
+  /* ---------- Who does what ---------- */
+  .raci-table-wrap{overflow-x:auto;padding:0 16px 14px;}
+  table.raci{border-collapse:collapse;width:100%;min-width:760px;margin-top:6px;}
+  table.raci th,table.raci td{
+    border:1px solid var(--gray-border);padding:8px 10px;font-size:12.5px;vertical-align:top;text-align:left;
+  }
+  table.raci th{background:#FBFCFC;font-weight:600;}
+  table.raci td .role{display:block;white-space:nowrap;}
+  table.raci td .role.doing{color:var(--teal);font-weight:600;}
+  table.raci td .role.signs{color:var(--blue-badge-text);}
+  table.raci td .role.asked{color:#9A6700;}
+  table.raci td .role.gets{color:var(--text-soft);}
+  table.raci td.empty-cell{color:#C5CBD0;text-align:center;}
+  .raci-note{padding:0 16px 14px;font-size:12px;color:var(--text-soft);}
+
+  /* ---------- Dashboard page ---------- */
+  .dash-hero{
+    background:linear-gradient(135deg,#0F6E56 0%,#13855F 60%,#16916F 100%);
+    color:#fff;border-radius:16px;padding:20px 24px;margin-bottom:16px;
+    display:flex;align-items:center;gap:24px;flex-wrap:wrap;box-shadow:var(--shadow-md);
+  }
+  .dash-hero .big{font-size:42px;font-weight:750;line-height:1;}
+  .dash-hero .big small{font-size:18px;font-weight:600;opacity:.85;}
+  .dash-hero .hero-label{font-size:12.5px;opacity:.85;margin-top:4px;}
+  .dash-hero .hero-bar{flex:1;min-width:200px;}
+  .dash-hero .hero-bar .progress{height:10px;background:rgba(255,255,255,.25);}
+  .dash-hero .hero-bar .progress i{background:#fff;}
+  .dash-hero .hero-stats{display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;}
+  .dash-hero .hero-stats b{display:block;font-size:19px;}
+  .dash-hero .rag-chip{background:rgba(255,255,255,.18);color:#fff;}
+  .dash-hero .rag-chip.red{background:#FCEAEA;color:var(--rag-red);}
+  .dash-hero .rag-chip.amber{background:#FCF1E0;color:var(--rag-amber);}
+  .dash-hero .rag-chip.green{background:#E4F3EA;color:var(--rag-green);}
+  .progress{height:8px;background:var(--gray-badge);border-radius:6px;overflow:hidden;}
+  .progress i{display:block;height:100%;background:var(--rag-green);border-radius:6px;transition:width .3s;}
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+  .kpi{
+    background:#fff;border:1px solid var(--gray-border);border-radius:12px;padding:14px 16px;
+    box-shadow:var(--shadow-sm);border-left:4px solid var(--gray-border);
+  }
+  .kpi .num{font-size:26px;font-weight:700;}
+  .kpi .lbl{font-size:12px;color:var(--text-soft);margin-top:2px;}
+  .kpi.red{border-left-color:var(--rag-red);}   .kpi.red .num{color:var(--rag-red);}
+  .kpi.amber{border-left-color:#D9A23B;}        .kpi.amber .num{color:var(--rag-amber);}
+  .kpi.green{border-left-color:var(--rag-green);} .kpi.green .num{color:var(--rag-green);}
+  .kpi.gray .num{color:var(--gray-badge-text);}
+  .dash-panels{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .panel{
+    background:#fff;border:1px solid var(--gray-border);border-radius:12px;
+    padding:16px;box-shadow:var(--shadow-sm);
+  }
+  .panel h3{font-size:13.5px;font-weight:600;margin-bottom:12px;}
+  .panel h3 .count-chip{font-size:11px;font-weight:600;border-radius:12px;padding:1px 8px;margin-left:6px;vertical-align:1px;}
+  .donut-wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+  .donut{width:130px;height:130px;border-radius:50%;position:relative;flex-shrink:0;}
+  .donut::after{content:"";position:absolute;inset:16px;background:#fff;border-radius:50%;}
+  .donut .pct{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:1;font-weight:700;font-size:21px;
+  }
+  .donut .pct small{font-size:10px;font-weight:600;color:var(--text-soft);}
+  .donut-legend{font-size:12.5px;flex:1;min-width:140px;}
+  .donut-legend div{display:flex;align-items:center;gap:7px;margin-bottom:6px;}
+  .donut-legend .sw{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+  .donut-legend b{margin-left:auto;}
+  .wsh-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .wsh-row .nm{flex:1;font-size:12.5px;min-width:0;}
+  .wsh-row .nm .ws-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;}
+  .wsh-row .progress{width:120px;flex-shrink:0;}
+  .wsh-row .frac{font-size:11.5px;color:var(--text-soft);width:36px;text-align:right;flex-shrink:0;}
+  .attn-item{
+    display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border-radius:9px;
+    margin-bottom:8px;font-size:12.5px;border-left:4px solid;
+  }
+  .attn-item.red{background:var(--rag-red-bg);border-left-color:var(--rag-red);}
+  .attn-item.amber{background:var(--rag-amber-bg);border-left-color:#D9A23B;}
+  .attn-item .anum{font-weight:700;color:var(--text-soft);flex-shrink:0;}
+  .attn-item .awhy{font-weight:700;white-space:nowrap;flex-shrink:0;margin-left:auto;}
+  .attn-item.red .awhy{color:var(--rag-red);}
+  .attn-item.amber .awhy{color:var(--rag-amber);}
+  .attn-item .ameta{color:var(--text-soft);font-size:11.5px;display:block;margin-top:1px;}
+  .all-clear{
+    text-align:center;color:var(--rag-green);background:var(--rag-green-bg);
+    border-radius:9px;padding:16px;font-size:13px;font-weight:600;
+  }
+  .dash-note{font-size:11.5px;color:var(--text-soft);text-align:center;margin-top:14px;}
+
+  /* ---------- Modals ---------- */
+  .overlay{
+    display:none;position:fixed;inset:0;background:rgba(20,30,35,.45);z-index:100;
+    align-items:flex-start;justify-content:center;padding:6vh 16px;overflow-y:auto;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:#fff;border-radius:14px;max-width:640px;width:100%;
+    box-shadow:0 16px 50px rgba(0,0,0,.25);
+  }
+  .modal-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px;border-bottom:1px solid var(--gray-border);
+  }
+  .modal-head h3{font-size:15px;font-weight:600;}
+  .modal-close{background:none;border:none;font-size:18px;color:var(--text-soft);padding:2px 8px;border-radius:5px;}
+  .modal-close:hover{background:var(--gray-badge);}
+  .modal-body{padding:16px 18px;}
+  .modal-body p.hint{font-size:12.5px;color:var(--text-soft);margin-bottom:10px;}
+  .modal-body textarea{
+    width:100%;min-height:160px;border:1px solid var(--gray-border);border-radius:8px;
+    padding:10px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;
+  }
+  .modal-body input[type=text]{
+    width:100%;border:1px solid var(--gray-border);border-radius:8px;padding:8px 10px;
+  }
+  .modal-foot{padding:12px 18px;border-top:1px solid var(--gray-border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
+  .field-row{margin-bottom:12px;}
+  .field-row label{display:block;font-size:12px;color:var(--text-soft);margin-bottom:4px;}
+  .field-row input[type=text],.field-row input[type=date],.field-row select,.field-row textarea{
+    width:100%;border:1px solid var(--gray-border);border-radius:8px;padding:8px 10px;min-height:auto;
+    font-family:inherit;font-size:13px;
+  }
+  .field-row textarea{min-height:70px;}
+
+  /* ---------- Toast ---------- */
+  .toast-wrap{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;align-items:center;}
+  .toast{
+    background:#243038;color:#fff;border-radius:10px;padding:10px 16px;font-size:13px;
+    display:flex;align-items:center;gap:14px;box-shadow:0 8px 24px rgba(0,0,0,.3);
+  }
+  .toast button{background:none;border:none;color:#7FD4BC;font-weight:600;font-size:13px;}
+  .toast button:hover{text-decoration:underline;}
+
+  /* ---------- Mobile ---------- */
+  @media (max-width:760px){
+    body{font-size:14px;}
+    .topbar{position:static;padding:10px 12px;gap:8px;}
+    .topbar .spacer{display:none;}
+    .titleblock{flex:1;min-width:0;}
+    .titleblock h1{font-size:15px;}
+    .actions{flex-basis:100%;}
+    .actions .btn{padding:7px 9px;font-size:12px;}
+    .viewtabs{width:100%;}
+    .viewtabs button{flex:1;padding:9px 8px;}
+
+    .summary{grid-template-columns:repeat(2,1fr);gap:8px;}
+    .stat.total{grid-column:1 / -1;display:flex;align-items:baseline;gap:10px;}
+    .stat{padding:10px 12px;}
+    .stat .num{font-size:21px;}
+
+    .filters{flex-direction:column;align-items:stretch;gap:6px;padding:12px 14px;}
+    .filters label{margin-bottom:-2px;}
+    .filters select{max-width:none;width:100%;padding:9px 8px;}
+    .filters .clear-filters{margin-left:0;align-self:flex-end;padding:6px 0;}
+
+    .task-grid-head{display:none;}
+    .task-row{
+      display:grid;
+      grid-template-columns:auto 1fr;
+      grid-template-areas:
+        "num   status"
+        "name  name"
+        "due   due"
+        "owner owner"
+        "signs signs"
+        "asked asked"
+        "gets  gets"
+        "notes notes";
+      gap:8px 10px;
+      padding:12px 44px 12px 14px;
+      position:relative;
+      min-width:0;
+    }
+    .tnum{grid-area:num;font-weight:600;color:var(--text);padding-top:3px;}
+    .tstatus{grid-area:status;justify-self:start;}
+    .tstatus .cell-label{display:none;}
+    .tname{grid-area:name;font-size:15px;line-height:1.4;}
+    .tname .cell-label{display:none;}
+    .towner{grid-area:owner;}
+    .tsigns{grid-area:signs;}
+    .tasked{grid-area:asked;}
+    .tgets{grid-area:gets;}
+    .tdue{grid-area:due;}
+    .tnotes{grid-area:notes;}
+    .cell-label{display:block;}
+    .row-menu-wrap{position:absolute;top:9px;right:6px;}
+    .dots-btn{padding:6px 9px;font-size:18px;}
+    .row-menu{position:absolute;}
+    .help-banner{flex-direction:column;}
+    .help-banner .dismiss{align-self:flex-end;}
+
+    .badge{padding:5px 12px;font-size:13px;}
+    .editable{padding:4px 5px;margin:-4px -5px;}
+    .ws-head{padding:13px 14px;}
+    .ws-progress{width:80px;}
+    .add-task-btn{padding:10px 12px;}
+
+    input,textarea,select,.edit-input,.status-select{font-size:16px;}
+
+    .overlay{padding:14px 8px;}
+    .modal-body{padding:14px;}
+    .modal-foot{padding:12px 14px;}
+    .modal-foot .btn{flex:1;justify-content:center;padding:11px 10px;font-size:14px;}
+
+    .dash-hero{padding:16px;gap:14px;}
+    .dash-hero .big{font-size:34px;}
+    .kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+    .dash-panels{grid-template-columns:1fr;}
+    .raci-table-wrap{-webkit-overflow-scrolling:touch;}
+    .wrap{padding:12px 10px 80px;}
+    .toast-wrap{left:10px;right:10px;transform:none;}
+    .toast{width:100%;justify-content:space-between;}
+  }
+
+  /* ---------- Print / PDF-ready view ---------- */
+  @page{size:A4 landscape;margin:12mm;}
+  @media print{
+    body{background:#fff;font-size:11px;}
+    .topbar .btn,.gear-wrap,.filters,.dots-btn,.add-task-btn,.ws-foot,
+    .ws-head .chev,.toast-wrap,.overlay,.sync-pill,.help-banner,.tabbar,
+    .legend-strip,.dash-note,.ws-edit-btn,.add-ws-btn{display:none !important;}
+    .task-grid-head,.task-row{min-width:0;gap:6px;padding:6px 8px;}
+    .ws-body{overflow:visible;}
+    .topbar{position:static;border-bottom:2px solid var(--teal);box-shadow:none;}
+    .ws.collapsed .ws-body{display:block !important;}
+    .ws,.stat,.kpi,.panel{border-color:#bbb;box-shadow:none;}
+    .ws{break-inside:avoid;page-break-inside:avoid;}
+    .editable:hover{background:none;outline:none;}
+    .editable:empty::before{content:"";}
+    .badge,.due-chip,.rag-chip{border:1px solid #999;}
+    .wrap{max-width:none;padding:0 4px;}
+    .ws-head{cursor:default;}
+    .dash-hero{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  }
+  body.print-preview .topbar .btn,
+  body.print-preview .gear-wrap,
+  body.print-preview .filters,
+  body.print-preview .dots-btn,
+  body.print-preview .add-task-btn,
+  body.print-preview .tabbar,
+  body.print-preview .ws-foot{display:none !important;}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <span class="logo">SMF</span>
+  <div class="titleblock">
+    <h1>Service Delivery Mobilisation Tracker</h1>
+    <div class="updated"><span id="lastUpdated">Last updated: —</span><button class="sync-pill local" id="syncPill" title="Live sync settings"><span class="dot"></span><span id="syncPillText">Local only</span></button></div>
+  </div>
+  <span class="spacer"></span>
+  <div class="actions">
+  <button class="btn" id="btnUndo" disabled title="Undo the last change (Ctrl+Z)">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5.5 3 2.5 6l3 3M2.5 6H10a3.5 3.5 0 0 1 0 7H7"/></svg>
+    Undo
+  </button>
+  <button class="btn" id="btnRedo" disabled title="Redo (Ctrl+Y)">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10.5 3l3 3-3 3M13.5 6H6a3.5 3.5 0 0 0 0 7h3"/></svg>
+    Redo
+  </button>
+  <button class="btn" id="btnExcel" title="Download the whole tracker as an Excel file">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 2.5h11v11h-11zM2.5 6h11M2.5 9.5h11M6 6v7.5"/></svg>
+    Download Excel
+  </button>
+  <button class="btn" id="btnShareLink" title="Copy a link that carries all current data">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6.5 9.5 9.5 6.5M5 11l-1.5 1.5a2.5 2.5 0 0 1-3.5-3.5L2.5 7M11 5l1.5-1.5a2.5 2.5 0 0 1 3.5 3.5L13.5 9" transform="scale(.9) translate(.5 .5)"/></svg>
+    Copy share link
+  </button>
+  <button class="btn" id="btnExport">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2v8M5 7l3 3 3-3M2.5 12.5v1a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-1"/></svg>
+    Export JSON
+  </button>
+  <button class="btn" id="btnImport">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 10V2M5 5l3-3 3 3M2.5 12.5v1a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-1"/></svg>
+    Import JSON
+  </button>
+  <button class="btn" id="btnPrint">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6V2.5h8V6M4 11H2.5V6.5h11V11H12M4 9.5h8v4H4z"/></svg>
+    Print view
+  </button>
+  <div class="gear-wrap">
+    <button class="btn" id="btnGear" title="Settings" aria-label="Settings">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.8v1.7M8 12.5v1.7M1.8 8h1.7M12.5 8h1.7M3.6 3.6l1.2 1.2M11.2 11.2l1.2 1.2M12.4 3.6l-1.2 1.2M4.8 11.2l-1.2 1.2"/></svg>
+    </button>
+    <div class="gear-menu" id="gearMenu">
+      <button id="btnSyncSetup">Live sync settings…</button>
+      <button id="btnShowHelp">Show column guide</button>
+    </div>
+  </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="tabbar">
+    <div class="viewtabs">
+      <button id="tabTasks" data-view="tasks">Task board</button>
+      <button id="tabDash" data-view="dash">Dashboard</button>
+    </div>
+  </div>
+
+  <!-- ================= TASK BOARD PAGE ================= -->
+  <div id="pageTasks">
+
+    <section class="summary" id="summary"></section>
+
+    <section class="filters">
+      <label for="fWs">Workstream</label>
+      <select id="fWs"></select>
+      <label for="fStatus">Status</label>
+      <select id="fStatus"></select>
+      <label for="fOwner">Owner</label>
+      <select id="fOwner"></select>
+      <button class="clear-filters" id="btnClearFilters">Clear filters</button>
+    </section>
+
+    <section class="help-banner" id="helpBanner" hidden>
+      <div>
+        <strong>How the people columns work</strong> — this is the project's "who does what" in plain words:
+        <ul>
+          <li><strong>Doing it</strong> — the owner: the person (or pair) actually doing the work. Every task needs one.</li>
+          <li><strong>Signs off</strong> — the one person who confirms it is properly done. Keep this to a single name — if two people sign off, neither does.</li>
+          <li><strong>Needs to be asked</strong> — people whose input is needed <em>before or while</em> doing it (e.g. JMT for TAT decisions). Ask them early; don't surprise them at sign-off.</li>
+          <li><strong>Gets update</strong> — people simply kept in the loop once things move. They don't need to act.</li>
+        </ul>
+        Colours follow a traffic light: <strong style="color:#CC3E3E">red</strong> = overdue or stuck, <strong style="color:#B45309">amber</strong> = due within 3 days or missing a date, <strong style="color:#1F7A43">green</strong> = on track or done. Click any cell to edit; click the due chip to pick a date from the calendar.
+      </div>
+      <button class="dismiss" id="btnDismissHelp">Got it</button>
+    </section>
+
+    <div class="legend-strip" id="legendStrip">
+      Quick guide: <b class="lk-doing">Doing it</b> = does the work &nbsp;·&nbsp;
+      <b class="lk-signs">Signs off</b> = approves it's done &nbsp;·&nbsp;
+      <b class="lk-asked">Needs to be asked</b> = give input first &nbsp;·&nbsp;
+      <b>Gets update</b> = kept informed &nbsp;·&nbsp;
+      <span class="lnk" id="legendMore">full guide</span>
+    </div>
+
+    <section id="workstreams"></section>
+
+    <section class="ws" id="raciPanel">
+      <div class="ws-head" id="raciHead">
+        <svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+        <h2>Who does what</h2>
+        <span class="ws-count">built automatically from the task list</span>
+      </div>
+      <div class="ws-body">
+        <div class="raci-table-wrap" id="raciTableWrap"></div>
+        <div class="raci-note">
+          <strong style="color:var(--teal)">Doing it</strong> = does the work &nbsp;•&nbsp;
+          <strong style="color:var(--blue-badge-text)">Signs off</strong> = approves it is done &nbsp;•&nbsp;
+          <strong style="color:#9A6700">Needs to be asked</strong> = give input before it's done &nbsp;•&nbsp;
+          <span>Gets update = kept in the loop</span>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ================= DASHBOARD PAGE ================= -->
+  <div id="pageDash" style="display:none"></div>
+
+</main>
+
+<!-- Export modal -->
+<div class="overlay" id="exportOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3>Export — share this data</h3><button class="modal-close" data-close="exportOverlay">×</button></div>
+    <div class="modal-body">
+      <p class="hint">Copy everything below and send it to a colleague (WhatsApp / email). They open this same file on their device, click <strong>Import JSON</strong>, and paste it in.</p>
+      <textarea id="exportText" readonly></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="btnDownloadJson">Download .json file</button>
+      <button class="btn btn-primary" id="btnCopyExport">Copy to clipboard</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import modal -->
+<div class="overlay" id="importOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3>Import shared data</h3><button class="modal-close" data-close="importOverlay">×</button></div>
+    <div class="modal-body">
+      <p class="hint">Paste the JSON a colleague exported, <em>or</em> paste a share link in the second box. <strong>This replaces everything currently on this device.</strong></p>
+      <div class="field-row">
+        <label>Paste exported JSON</label>
+        <textarea id="importText" placeholder='{"tasks": [...]}'></textarea>
+      </div>
+      <div class="field-row">
+        <label>…or paste a share link</label>
+        <input type="text" id="importLink" placeholder="https://…#data=…">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-close="importOverlay">Cancel</button>
+      <button class="btn btn-primary" id="btnDoImport">Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit task modal -->
+<div class="overlay" id="editOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3 id="editModalTitle">Edit task</h3><button class="modal-close" data-close="editOverlay">×</button></div>
+    <div class="modal-body">
+      <div class="field-row"><label>Task</label><textarea id="emName"></textarea></div>
+      <div class="field-row"><label>Owner (doing it)</label><input type="text" id="emOwner"></div>
+      <div class="field-row"><label>Signs off</label><input type="text" id="emSignoff"></div>
+      <div class="field-row"><label>Needs to be asked</label><input type="text" id="emConsulted"></div>
+      <div class="field-row"><label>Gets an update</label><input type="text" id="emInformed"></div>
+      <div class="field-row"><label>Due date</label><input type="date" id="emDue"></div>
+      <div class="field-row"><label>Timing note (optional, e.g. "Before POC go-live")</label><input type="text" id="emDueHint"></div>
+      <div class="field-row"><label>Status</label><select id="emStatus"></select></div>
+      <div class="field-row"><label>Notes</label><textarea id="emNotes"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-close="editOverlay">Cancel</button>
+      <button class="btn btn-primary" id="btnSaveEdit">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Live sync settings modal -->
+<div class="overlay" id="syncOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3>Live sync — updates on every device, instantly</h3><button class="modal-close" data-close="syncOverlay">×</button></div>
+    <div class="modal-body">
+      <p class="hint">Live sync is <strong>built into this tracker</strong> — everyone who opens the page link shares one live copy, and any change appears on every device within a couple of seconds. There is nothing to set up.</p>
+      <div class="field-row">
+        <label>Team database URL (advanced)</label>
+        <input type="text" id="syncUrlInput" placeholder="https://yourproject-default-rtdb.firebasedatabase.app/">
+      </div>
+      <p class="hint">Only change this if the team ever moves to a new database — everyone must use the same URL to see the same data. Heads-up: a Firebase database created in "test mode" stops accepting changes after 30 days; in Firebase open the <strong>Rules</strong> tab and set both <code>.read</code> and <code>.write</code> to <code>true</code> to keep it running. Anyone with the page link can edit, so don't store anything confidential.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="btnSyncOff" style="margin-right:auto;color:#C04A1E;">Turn off sync</button>
+      <button class="btn" data-close="syncOverlay">Cancel</button>
+      <button class="btn btn-primary" id="btnSyncConnect">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Share modal -->
+<div class="overlay" id="shareOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3>Share this tracker</h3><button class="modal-close" data-close="shareOverlay">×</button></div>
+    <div class="modal-body" id="shareBody"></div>
+    <div class="modal-foot"><button class="btn" data-close="shareOverlay">Close</button></div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+(function(){
+"use strict";
+
+// Captured before anything renders, so a clean copy of this file can be
+// regenerated (with current data baked in) for the "share a copy" flow.
+var SOURCE_HTML = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+
+var LS_KEY = "smf_sd_tracker_v1";
+
+/* Team database baked into the page: anyone who opens the hosted tracker
+   joins live sync automatically, so the plain page URL is the share link.
+   Set to "" to make live sync opt-in again. */
+var DEFAULT_SYNC_URL = "https://hms-33bef-default-rtdb.asia-southeast1.firebasedatabase.app/";
+
+var STATUSES = [
+  { key:"not_started", label:"Not started yet" },
+  { key:"working",     label:"Working on it" },
+  { key:"stuck",       label:"Stuck — needs help" },
+  { key:"done",        label:"Done" }
+];
+function statusLabel(k){ for(var i=0;i<STATUSES.length;i++){ if(STATUSES[i].key===k) return STATUSES[i].label; } return k; }
+
+var STATUS_ICONS = {
+  not_started: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="5.5"/></svg>',
+  working:     '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M12 1.8v2.7H9.3"/></svg>',
+  stuck:       '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2.2 14.6 13H1.4L8 2.2z" stroke-linejoin="round"/><path d="M8 6.5v3"/><circle cx="8" cy="11.4" r="0.4" fill="currentColor"/></svg>',
+  done:        '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3.2 3L13 4.5"/></svg>'
+};
+var CAL_ICON = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg>';
+
+var WORKSTREAMS = [
+  { id:1, name:"HR & Team Formalisation" },
+  { id:2, name:"SOP & Training Manual" },
+  { id:3, name:"POC (Proof of Concept) Setup" },
+  { id:4, name:"Process Readiness & Workflow Alignment" },
+  { id:5, name:"Communication & Governance" }
+];
+var WS_COLORS = { 1:"#0F6E56", 2:"#1B5FAB", 3:"#7C3AED", 4:"#B45309", 5:"#BE185D" };
+var WS_PALETTE = ["#0F6E56","#1B5FAB","#7C3AED","#B45309","#BE185D","#0E7490","#4D7C0F","#9333EA","#C2410C","#0369A1"];
+function wsColor(id){ return WS_COLORS[id] || WS_PALETTE[(id-1) % WS_PALETTE.length]; }
+/* Built-in workstreams plus any the team has added. customWs lives in state
+   and syncs to everyone like tasks do; an entry whose id matches a built-in
+   workstream acts as a rename of that workstream. */
+function allWs(){
+  var custom = state && state.customWs || [];
+  var byId = {};
+  custom.forEach(function(w){ byId[w.id] = w; });
+  var list = WORKSTREAMS.map(function(w){ return byId[w.id] ? { id:w.id, name:byId[w.id].name } : w; });
+  custom.forEach(function(w){
+    if(!w.deleted && !WORKSTREAMS.some(function(b){ return b.id===w.id; })) list.push(w);
+  });
+  return list;
+}
+function normalizeWsEntry(w){
+  if(!w || !parseInt(w.id,10)) return null;
+  return { id: parseInt(w.id,10), name: String(w.name||"Workstream"), deleted: !!w.deleted, updatedAt: parseInt(w.updatedAt,10)||0 };
+}
+
+/* Ordered by project hierarchy */
+var STAKEHOLDERS = [
+  { name:"Dr. Arjun Rangarajan — Project Chairperson", re:/arjun|director|\bjmt\b/i },
+  { name:"Mr. Alex — Project Head",                    re:/\balex\b/i },
+  { name:"Dr. Sindhuja — Project Advisor",             re:/sindhuja/i },
+  { name:"Ms. Vamci — Project Advisor",                re:/vamci/i },
+  { name:"Ms. Thirumamangai (Mangai) — SD HOD",        re:/thirumamangai|mangai|\bhr\b/i },
+  { name:"Nikthesh — Product Owner",                   re:/nikthesh/i },
+  { name:"Mrs. Amudha — PR HOD (OP)",                  re:/amudha/i },
+  { name:"Mrs. Anuradha — PR HOD (IP)",                re:/anuradha/i },
+  { name:"Ms. Sandhya — SD TL (OP)",                   re:/sandhya|op sd tl/i },
+  { name:"Ms. Chitra — SD TL (IP)",                    re:/chitra|ip sd tl/i },
+  { name:"Department HODs",                            re:/\bhods?\b/i }
+];
+
+function isoOffset(days){
+  var d = new Date(Date.now() + days*86400000);
+  var m = d.getMonth()+1, dd = d.getDate();
+  return d.getFullYear() + "-" + (m<10?"0":"") + m + "-" + (dd<10?"0":"") + dd;
+}
+
+function seedTasks(){
+  // [ws, num, name, owner, signoff, informed, dueHint, notes, dueOffsetDays]
+  var t = [
+    // Workstream 1 — HR & Team Formalisation
+    [1,"1.1","Confirm and freeze OP SD team composition at Mogappair (1 TL Ms. Sandhya + 2 IVRS Executives + Care Coordinator + CC Intern)","Mrs. Amudha / Mrs. Anuradha (HR)","Director","Dr. Sindhuja, Mr. Alex, Nikthesh","Earliest possible","3 IVRS agents redeployed from OP PR. No new hire.",3],
+    [1,"1.2","Confirm and freeze IP SD team composition at Anna Nagar (1 TL Ms. Chitra + 1 IVRS Executive + 1 IP PR executive)","Mrs. Amudha / Mrs. Anuradha (HR)","Director","Dr. Sindhuja, Mr. Alex, Nikthesh","Earliest possible","IP PR executive freed from feedback duty.",3],
+    [1,"1.3","Issue formal role-alignment letters / internal deployment orders for all redeployed staff","HR Team","Director","All team leads","After freeze","Covers IVRS → SD, CC → SD, IP PR → SD transitions.",6],
+    [1,"1.4","Confirm reporting structure for OP SD Team (TL reports to Ms. Thirumamangai)","HR Team","Ms. Thirumamangai","Dr. Sindhuja, Mr. Alex","After role letters","Governance: Dr. Arjun Rangarajan chairs project.",8],
+    [1,"1.5","Confirm reporting structure for IP SD Team (same governance)","HR Team","Ms. Thirumamangai","Dr. Sindhuja, Mr. Alex","After role letters","",8],
+    [1,"1.6","Complete handover briefings from IVRS team to redeployed executives","Mr. Alex + Team Leads","Ms. Thirumamangai","HR, Nikthesh","Before POC start","Ensure no disruption to remaining 6 IVRS agents (64.5% utilisation).",10],
+    // Workstream 2 — SOP & Training Manual
+    [2,"2.1","Share approved SOP and Training Manual with all stakeholders","Mr. Alex","Ms. Thirumamangai","HR, Dr. Sindhuja, Nikthesh, Team Leads","Immediately (director's request)","Director has explicitly asked Mr. Alex to share this at the earliest.",1],
+    [2,"2.2","Confirm SOP covers: feedback collection, complaint view-only protocol for SD, RCA/CAPA documentation, Google review guidance, wow moments","Mr. Alex","Dr. Sindhuja","Nikthesh","On share","",3],
+    [2,"2.3","Confirm Training Manual covers SterloCare module navigation for SD Executives","Mr. Alex + Ms. Vamci (T&D)","Ms. Thirumamangai","HR, Nikthesh","On share","SterloCare = complaint & feedback platform.",3],
+    [2,"2.4","Commence formal training program for SD Executives (OP + IP) per approved SOP","Mr. Alex + Ms. Vamci","Ms. Thirumamangai","Dr. Sindhuja, Nikthesh","After manpower freeze","Training to run in parallel with POC setup.",6],
+    [2,"2.5","Train IP Telephone Operator (TO) team on SterloCare modules (Phase 2 readiness)","Mr. Alex + Ms. Vamci","Ms. Thirumamangai","IP TL Ms. Chitra","During POC period","TO team: 6 agents, currently 7.4% utilisation. Phase 2 role: night-hour SD support.",21],
+    // Workstream 3 — POC Setup
+    [3,"3.1","Initiate POC process — define scope, timelines, and success metrics","Nikthesh","Ms. Thirumamangai","Mr. Alex, Dr. Sindhuja, HR","As soon as manpower confirmed","Director has asked Nikthesh to lead POC and share regular updates.",4],
+    [3,"3.2","Configure SterloCare complaint module for OP (Mogappair) — PR as owner, SD as view-only","Nikthesh + Mr. Alex (Sterlo vendor)","Ms. Thirumamangai","OP PR Section Head, OP SD TL","Before POC go-live","TAT 1 = 15 min acknowledgement. TAT 2 & 3 to be defined by JMT at operationalisation.",12],
+    [3,"3.3","Configure SterloCare feedback module for OP SD Team — target 75 feedback/day","Nikthesh + Mr. Alex","Ms. Thirumamangai","OP SD TL Ms. Sandhya","Before POC go-live","NPS QR + tablet at OP counters. 0–5 scores trigger WhatsApp follow-up.",12],
+    [3,"3.4","Configure SterloCare feedback module for IP SD Team — target 28 feedback/day (discharge day)","Nikthesh + Mr. Alex","Ms. Thirumamangai","IP SD TL Ms. Chitra","Before POC go-live","Face-to-face collection at bedside on discharge day.",12],
+    [3,"3.5","Set up Director-level live dashboard access on SterloCare","Nikthesh + Sterlo vendor","Ms. Thirumamangai","Director, Dr. Arjun Rangarajan","Before go-live","Directors must see all modules for both campuses in real time.",12],
+    [3,"3.6","Configure automated weekly report dispatch from SterloCare to Director","Nikthesh + Sterlo vendor","Ms. Thirumamangai","Director","Before go-live","Covers complaints, TAT compliance, feedback scores, Google review trends.",12],
+    [3,"3.7","Install QR codes + tablets at OP counters (Mogappair)","Nikthesh + IT","Mr. Alex","OP SD TL","Before POC start","",10],
+    [3,"3.8","Install bedside QR + tablets at IP wards (Anna Nagar)","Nikthesh + IT","Mr. Alex","IP SD TL","Before POC start","",10],
+    [3,"3.9","Define Closing TAT and HOD Resolution TAT for all 14 departments (currently undecided)","Nikthesh (facilitates)","JMT + HODs","All stakeholders","At operationalisation","Acknowledgement TAT is fixed at 15 min. These two are pending JMT decision.",30],
+    // Workstream 4 — Process Readiness & Workflow Alignment
+    [4,"4.1","Brief OP PR Section Head and HOD on new complaint workflow (SD is view-only; PR owns closure)","Mr. Alex + Nikthesh","Ms. Thirumamangai","OP PR team","Before POC","PR Section Head facilitates; cannot close complaints. SD cannot close complaints in OP.",9],
+    [4,"4.2","Brief IP PR team on restored core PR function (feedback duty removed; Level A escalation role formalised)","Mr. Alex + Nikthesh","Ms. Thirumamangai","IP PR team, IP SD TL","Before POC","IP PR now freed for full-time complaint management.",9],
+    [4,"4.3","Brief all 14 Department Section Heads on complaint acknowledgement responsibility (15-min TAT)","Ms. Thirumamangai + Mr. Alex","Director","HODs","Before go-live","Section Heads are the only complaint closure authority.",12],
+    [4,"4.4","Brief all 14 Department HODs on escalation protocol (TAT 2 breach → HOD notified; TAT 3 breach → Director notified)","Ms. Thirumamangai","Director","All Section Heads","Before go-live","",12],
+    [4,"4.5","Define wow moments documentation format and monthly review process","Mr. Alex + SD TLs","Ms. Thirumamangai","Dr. Sindhuja, Nikthesh","During training","Wow moments to be documented, reviewed monthly, shared as best practice.",14],
+    [4,"4.6","Define RCA/CAPA documentation template for SD Executives","Mr. Alex + Dr. Sindhuja","Ms. Thirumamangai","SD TLs, Nikthesh","During training","SD own RCA/CAPA for feedback; PR Section Head reviews.",14],
+    [4,"4.7","Confirm Google review ethical guidance process and training for SD Executives","Mr. Alex + Marketing","Ms. Thirumamangai","SD TLs","During training","Marketing team to support; no incentivised reviews.",14],
+    // Workstream 5 — Communication & Governance
+    [5,"5.1","Share daily status update on shared Excel sheet (activities, pending actions, support needed, timelines)","Nikthesh","Ms. Thirumamangai","Director, Mr. Alex, HR, Dr. Sindhuja","Daily from today","Director has explicitly asked Nikthesh to maintain this.",0],
+    [5,"5.2","Share RACI matrix (who does what across all workstreams) with all stakeholders","Nikthesh","Ms. Thirumamangai","All project stakeholders","By end of tomorrow","Director's explicit ask: \"share daily updates with RACI matrix by end of tomorrow.\"",1],
+    [5,"5.3","Share regular POC progress updates with all stakeholders","Nikthesh","Ms. Thirumamangai","Director, Mr. Alex, HR, Dr. Sindhuja","Weekly during POC","",7],
+    [5,"5.4","Conduct implementation readiness check across OP SD + IP SD + IT + PR + HR before go-live","Nikthesh + Mr. Alex","Ms. Thirumamangai","Director","Before go-live","",12]
+  ];
+  var now = Date.now();
+  return t.map(function(r,i){
+    return { id:i+1, ws:r[0], num:r[1], name:r[2], owner:r[3], signoff:r[4], consulted:"", informed:r[5],
+             due:isoOffset(r[8]), dueHint:r[6], status:"not_started", notes:r[7], deleted:false, updatedAt:now };
+  });
+}
+
+function freshState(){
+  var tasks = seedTasks();
+  return {
+    tasks: tasks,
+    nextId: tasks.length + 1,
+    lastUpdated: Date.now(),
+    filters: { ws:"all", status:"all", owner:"all" },
+    collapsed: {},
+    raciCollapsed: false,
+    helpDismissed: false,
+    customWs: [],
+    view: "tasks",
+    sync: { url:"" }
+  };
+}
+
+var ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+var state;
+var autoJoinedNow = false;
+function joinDefaultSync(s){
+  // Age local timestamps so the team's data wins the first merge instead of
+  // being overwritten by this device's untouched copy.
+  s.tasks.forEach(function(t){ t.updatedAt = 0; });
+  s.sync = { url: DEFAULT_SYNC_URL };
+  autoJoinedNow = true;
+}
+function load(){
+  try{
+    var raw = localStorage.getItem(LS_KEY);
+    if(raw){
+      var s = JSON.parse(raw);
+      if(s && Array.isArray(s.tasks)){
+        var d = freshState();
+        for(var k in d){ if(!(k in s)) s[k] = d[k]; }
+        if(!s.filters) s.filters = { ws:"all", status:"all", owner:"all" };
+        if(!s.sync || typeof s.sync.url !== "string") s.sync = { url:"" };
+        s.customWs = (Array.isArray(s.customWs) ? s.customWs : []).map(normalizeWsEntry).filter(Boolean);
+        if(s.view !== "dash") s.view = "tasks";
+        s.tasks.forEach(function(t){
+          if(t.consulted == null) t.consulted = "";
+          if(t.dueHint == null) t.dueHint = "";
+          if(!t.updatedAt) t.updatedAt = s.lastUpdated || Date.now();
+          // Older versions stored free text in due; keep it as the timing note.
+          if(t.due && !ISO_RE.test(t.due)){
+            if(!t.dueHint) t.dueHint = t.due;
+            t.due = "";
+          }
+        });
+        // Devices that opened the tracker before the team database was baked
+        // in: join it now (unless live sync was explicitly turned off).
+        // Must run after the updatedAt backfill above so the aging sticks.
+        if(!s.sync.url && DEFAULT_SYNC_URL && !s.sync.optOut) joinDefaultSync(s);
+        state = s;
+        return;
+      }
+    }
+  }catch(e){ /* corrupted storage — fall back to seed */ }
+  // First open on this device: a "share copy" of this file carries the
+  // sender's data in an embedded JSON block — prefer it over seed data.
+  var boot = readBootstrap();
+  if(boot && Array.isArray(boot.tasks) && boot.tasks.length){
+    state = freshState();
+    var maxId = 0;
+    state.tasks = boot.tasks.map(function(t){
+      var n = normalizeTask(t);
+      maxId = Math.max(maxId, n.id);
+      return n;
+    });
+    state.tasks.forEach(function(t){ if(!t.id) t.id = ++maxId; });
+    state.nextId = Math.max(maxId+1, parseInt(boot.nextId,10)||0, 1);
+    if(boot.sync && boot.sync.url) state.sync = { url:String(boot.sync.url) };
+    if(Array.isArray(boot.customWs)) state.customWs = boot.customWs.map(normalizeWsEntry).filter(Boolean);
+    persist(false);
+    return;
+  }
+  state = freshState();
+  if(DEFAULT_SYNC_URL) joinDefaultSync(state);
+  persist(false);
+}
+function readBootstrap(){
+  var el = document.getElementById("bootstrapData");
+  if(!el) return null;
+  try{ return JSON.parse(el.textContent); }catch(e){ return null; }
+}
+function persist(touch){
+  if(touch !== false) state.lastUpdated = Date.now();
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){ /* storage full or blocked */ }
+  renderTimestamp();
+  if(touch !== false) schedulePush();
+}
+
+/* ---------- helpers ---------- */
+function $(id){ return document.getElementById(id); }
+function esc(s){
+  return String(s == null ? "" : s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+function liveTasks(){ return state.tasks.filter(function(t){ return !t.deleted; }); }
+
+/* ---------- automatic task numbering ----------
+   The stored num is only a stable ordering key; the number people see is
+   computed from the task's position among the live tasks of its workstream,
+   so deleting a task closes the gap (3.8, 3.10 shows as 3.8, 3.9). */
+function numKey(t){ var m = /^\d+\.(\d+)/.exec(t.num||""); return m ? parseInt(m[1],10) : 1e9; }
+function wsTasks(wsId){
+  return liveTasks().filter(function(t){ return t.ws===wsId; })
+    .sort(function(a,b){ return numKey(a)-numKey(b) || a.id-b.id; });
+}
+function taskNum(t){
+  var list = wsTasks(t.ws);
+  for(var i=0;i<list.length;i++){ if(list[i].id===t.id) return t.ws+"."+(i+1); }
+  return t.ws+".–";
+}
+function findTask(id){
+  for(var i=0;i<state.tasks.length;i++){ if(state.tasks[i].id===id) return state.tasks[i]; }
+  return null;
+}
+function renderTimestamp(){
+  var d = new Date(state.lastUpdated);
+  $("lastUpdated").textContent = "Last updated: " + d.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}) + ", " + d.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"});
+}
+
+/* ---------- due date / RAG helpers ---------- */
+function dueInfo(t){
+  if(!t.due || !ISO_RE.test(t.due)) return { code: t.status==="done" ? "done" : "none", days:null };
+  var p = t.due.split("-");
+  var due = new Date(+p[0], +p[1]-1, +p[2]);
+  var now = new Date();
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var days = Math.round((due - today) / 86400000);
+  if(t.status === "done") return { code:"done", days:days };
+  if(days < 0)  return { code:"overdue", days:days };
+  if(days <= 3) return { code:"soon", days:days };
+  return { code:"ok", days:days };
+}
+function fmtDueDate(iso){
+  if(!iso || !ISO_RE.test(iso)) return "";
+  var p = iso.split("-");
+  var d = new Date(+p[0], +p[1]-1, +p[2]);
+  var opts = { day:"numeric", month:"short" };
+  if(d.getFullYear() !== new Date().getFullYear()) opts.year = "2-digit";
+  return d.toLocaleDateString(undefined, opts);
+}
+function dueWhenText(info){
+  if(info.days == null) return "";
+  if(info.code === "overdue") return (-info.days) + (info.days === -1 ? " day late" : " days late");
+  if(info.days === 0) return "due today";
+  if(info.code === "soon") return "in " + info.days + (info.days === 1 ? " day" : " days");
+  return "";
+}
+function wsRag(tasks){
+  if(!tasks.length) return { cls:"green", label:"On track" };
+  var anyRed=false, anyAmber=false, allDone=true;
+  tasks.forEach(function(t){
+    if(t.status!=="done") allDone=false;
+    var di = dueInfo(t);
+    if(t.status==="stuck" || di.code==="overdue") anyRed=true;
+    else if(di.code==="soon" || di.code==="none") anyAmber=true;
+  });
+  if(allDone) return { cls:"green", label:"All done" };
+  if(anyRed)  return { cls:"red", label:"At risk" };
+  if(anyAmber)return { cls:"amber", label:"Watch" };
+  return { cls:"green", label:"On track" };
+}
+
+/* ---------- toast ---------- */
+function toast(msg, undoLabel, onUndo, ms){
+  var el = document.createElement("div");
+  el.className = "toast";
+  var span = document.createElement("span");
+  span.textContent = msg;
+  el.appendChild(span);
+  var timer;
+  if(undoLabel){
+    var b = document.createElement("button");
+    b.textContent = undoLabel;
+    b.onclick = function(){ clearTimeout(timer); el.remove(); onUndo(); };
+    el.appendChild(b);
+  }
+  $("toastWrap").appendChild(el);
+  timer = setTimeout(function(){ el.remove(); }, ms || 3000);
+}
+
+/* ---------- summary ---------- */
+function renderSummary(){
+  var counts = { total:0, done:0, working:0, stuck:0, not_started:0 };
+  liveTasks().forEach(function(t){ counts.total++; counts[t.status] = (counts[t.status]||0)+1; });
+  $("summary").innerHTML =
+    '<div class="stat total"><div class="num">'+counts.total+'</div><div class="lbl">Total tasks</div></div>'+
+    '<div class="stat done"><div class="num">'+counts.done+'</div><div class="lbl">Done</div></div>'+
+    '<div class="stat working"><div class="num">'+counts.working+'</div><div class="lbl">Working on it</div></div>'+
+    '<div class="stat stuck"><div class="num">'+counts.stuck+'</div><div class="lbl">Stuck — needs help</div></div>'+
+    '<div class="stat notstarted"><div class="num">'+counts.not_started+'</div><div class="lbl">Not started yet</div></div>';
+}
+
+/* ---------- filters ---------- */
+function ownerOptions(){
+  var opts = [], seen = {};
+  STAKEHOLDERS.forEach(function(st){
+    var hit = liveTasks().some(function(t){ return st.re.test(t.owner||""); });
+    if(hit){ opts.push({ value:"st:"+st.name, label:st.name }); seen[st.name]=true; }
+  });
+  liveTasks().forEach(function(t){
+    var o = (t.owner||"").trim();
+    if(!o) return;
+    var matched = STAKEHOLDERS.some(function(st){ return st.re.test(o); });
+    if(!matched && !seen[o]){ seen[o]=true; opts.push({ value:"raw:"+o, label:o }); }
+  });
+  return opts;
+}
+function renderFilters(){
+  var f = state.filters;
+  var wsSel = '<option value="all">All workstreams</option>';
+  allWs().forEach(function(w){
+    wsSel += '<option value="'+w.id+'"'+(String(f.ws)===String(w.id)?" selected":"")+'>'+w.id+' — '+esc(w.name)+'</option>';
+  });
+  $("fWs").innerHTML = wsSel;
+
+  var stSel = '<option value="all">All statuses</option>';
+  STATUSES.forEach(function(s){
+    stSel += '<option value="'+s.key+'"'+(f.status===s.key?" selected":"")+'>'+esc(s.label)+'</option>';
+  });
+  $("fStatus").innerHTML = stSel;
+
+  var owSel = '<option value="all">All owners</option>';
+  ownerOptions().forEach(function(o){
+    owSel += '<option value="'+esc(o.value)+'"'+(f.owner===o.value?" selected":"")+'>'+esc(o.label)+'</option>';
+  });
+  $("fOwner").innerHTML = owSel;
+}
+function taskPassesFilter(t){
+  var f = state.filters;
+  if(f.ws !== "all" && String(t.ws) !== String(f.ws)) return false;
+  if(f.status !== "all" && t.status !== f.status) return false;
+  if(f.owner !== "all"){
+    if(f.owner.indexOf("st:")===0){
+      var name = f.owner.slice(3), st = null;
+      for(var i=0;i<STAKEHOLDERS.length;i++){ if(STAKEHOLDERS[i].name===name){ st=STAKEHOLDERS[i]; break; } }
+      // st missing = saved filter predates a stakeholder rename: show everything
+      if(st && !st.re.test(t.owner||"")) return false;
+    }else if(f.owner.indexOf("raw:")===0){
+      if((t.owner||"").trim() !== f.owner.slice(4)) return false;
+    }
+  }
+  return true;
+}
+
+/* ---------- workstream panels ---------- */
+function statusBadge(t){
+  return '<span class="badge '+t.status+'" data-act="status" data-id="'+t.id+'" title="Click to change status">'+
+    STATUS_ICONS[t.status] + esc(statusLabel(t.status)) + '</span>';
+}
+function editableCell(t, field, cls){
+  return '<span class="editable '+(cls||"")+'" data-act="edit" data-id="'+t.id+'" data-field="'+field+'">'+esc(t[field]||"")+'</span>';
+}
+function dueCell(t){
+  var info = dueInfo(t);
+  var html;
+  if(info.code === "none"){
+    html = '<span class="due-chip rag-none" data-act="edit-due" data-id="'+t.id+'" title="A due date is required — click to pick one">'+CAL_ICON+'Pick a date</span>';
+  }else{
+    var cls = info.code === "overdue" ? "rag-red"
+            : info.code === "soon"    ? "rag-amber"
+            : info.code === "done"    ? "rag-done" : "rag-green";
+    html = '<span class="due-chip '+cls+'" data-act="edit-due" data-id="'+t.id+'" title="Click to change the date">'+CAL_ICON+esc(fmtDueDate(t.due))+'</span>';
+    var when = dueWhenText(info);
+    if(when && info.code !== "done"){
+      html += '<span class="due-when '+(info.code==="overdue"?"rag-red":info.code==="soon"?"rag-amber":"rag-green")+'">'+esc(when)+'</span>';
+    }
+  }
+  if(t.dueHint) html += '<span class="due-hint">'+esc(t.dueHint)+'</span>';
+  return html;
+}
+function renderWorkstreams(){
+  var html = "";
+  allWs().forEach(function(w){
+    var all = wsTasks(w.id);
+    var shown = all.filter(taskPassesFilter);
+    var doneCount = all.filter(function(t){ return t.status==="done"; }).length;
+    var pct = all.length ? Math.round(doneCount/all.length*100) : 0;
+    var rag = wsRag(all);
+    var collapsed = !!state.collapsed[w.id];
+    html += '<div class="ws'+(collapsed?" collapsed":"")+'" data-ws="'+w.id+'"'+
+      (WS_COLORS[w.id] ? '' : ' style="--wsac:'+wsColor(w.id)+'"')+'>';
+    html += '<div class="ws-head" data-act="toggle-ws" data-ws="'+w.id+'">'+
+      '<svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>'+
+      '<h2><span class="ws-dot"></span>Workstream '+w.id+' — '+esc(w.name)+'</h2>'+
+      '<button class="ws-edit-btn" data-act="rename-ws" data-ws="'+w.id+'" title="Rename this workstream">✎</button>'+
+      '<span class="rag-chip '+rag.cls+'"><span class="dot"></span>'+rag.label+'</span>'+
+      '<div class="ws-progress" title="'+pct+'% done"><i style="width:'+pct+'%"></i></div>'+
+      '<span class="ws-count">'+doneCount+' of '+all.length+' done</span></div>';
+    html += '<div class="ws-body">';
+    if(shown.length){
+      html += '<div class="task-grid-head"><div>#</div><div>Task</div>'+
+        '<div title="The owner — the person actually doing the work">Doing it</div>'+
+        '<div title="The one person who confirms it is properly done">Signs off</div>'+
+        '<div title="People whose input is needed before or while doing it">Needs to be asked</div>'+
+        '<div title="People kept in the loop — no action needed from them">Gets update</div>'+
+        '<div>Status</div><div title="Click the chip to pick a date">Due</div><div>Notes</div><div></div></div>';
+      shown.forEach(function(t){
+        html += '<div class="task-row" data-id="'+t.id+'">'+
+          '<div class="tnum">'+esc(taskNum(t))+'</div>'+
+          '<div class="tname'+(t.status==="done"?" done-task":"")+'"><span class="cell-label">Task</span>'+editableCell(t,"name")+'</div>'+
+          '<div class="towner"><span class="cell-label">Doing it</span>'+editableCell(t,"owner")+'</div>'+
+          '<div class="tsigns"><span class="cell-label">Signs off</span>'+editableCell(t,"signoff","people")+'</div>'+
+          '<div class="tasked"><span class="cell-label">Needs to be asked</span>'+editableCell(t,"consulted","people")+'</div>'+
+          '<div class="tgets"><span class="cell-label">Gets update</span>'+editableCell(t,"informed","people")+'</div>'+
+          '<div class="tstatus"><span class="cell-label">Status</span>'+statusBadge(t)+'</div>'+
+          '<div class="tdue"><span class="cell-label">Due</span>'+dueCell(t)+'</div>'+
+          '<div class="tnotes"><span class="cell-label">Notes</span>'+editableCell(t,"notes")+'</div>'+
+          '<div class="row-menu-wrap">'+
+            '<button class="dots-btn" data-act="row-menu" data-id="'+t.id+'" aria-label="Task menu">···</button>'+
+            '<div class="row-menu" id="rowmenu-'+t.id+'">'+
+              '<button data-act="edit-modal" data-id="'+t.id+'">Edit all details…</button>'+
+              '<button class="danger" data-act="delete" data-id="'+t.id+'">Delete task</button>'+
+            '</div>'+
+          '</div>'+
+        '</div>';
+      });
+    }else{
+      html += '<div class="empty-msg">'+(all.length? "No tasks match the current filters." : "No tasks yet — add one below.")+'</div>';
+    }
+    html += '<div class="ws-foot"><button class="add-task-btn" data-act="add-task" data-ws="'+w.id+'">+ Add a task to this workstream</button></div>';
+    html += '</div></div>';
+  });
+  html += '<button class="add-ws-btn" data-act="add-ws">+ Add a new workstream</button>';
+  $("workstreams").innerHTML = html;
+}
+
+/* ---------- Who does what ---------- */
+function renderRaci(){
+  var panel = $("raciPanel");
+  panel.classList.toggle("collapsed", !!state.raciCollapsed);
+  var map = {};
+  STAKEHOLDERS.forEach(function(st){ map[st.name]={}; });
+  liveTasks().forEach(function(t){
+    STAKEHOLDERS.forEach(function(st){
+      var cell = map[st.name][t.ws] = map[st.name][t.ws] || {};
+      if(st.re.test(t.owner||""))     cell.doing = true;
+      if(st.re.test(t.signoff||""))   cell.signs = true;
+      if(st.re.test(t.consulted||"")) cell.asked = true;
+      if(st.re.test(t.informed||""))  cell.gets  = true;
+    });
+  });
+  var html = '<table class="raci"><thead><tr><th>Person / team</th>';
+  allWs().forEach(function(w){ html += '<th>WS '+w.id+'<br><span style="font-weight:400;font-size:11px">'+esc(w.name)+'</span></th>'; });
+  html += '</tr></thead><tbody>';
+  STAKEHOLDERS.forEach(function(st){
+    var any = false;
+    var row = '<tr><th>'+esc(st.name)+'</th>';
+    allWs().forEach(function(w){
+      var c = map[st.name][w.id] || {};
+      var parts = [];
+      if(c.doing) parts.push('<span class="role doing">Doing it</span>');
+      if(c.signs) parts.push('<span class="role signs">Signs off</span>');
+      if(c.asked) parts.push('<span class="role asked">Needs to be asked</span>');
+      if(c.gets)  parts.push('<span class="role gets">Gets update</span>');
+      if(parts.length){ any = true; row += '<td>'+parts.join("")+'</td>'; }
+      else row += '<td class="empty-cell">—</td>';
+    });
+    row += '</tr>';
+    if(any) html += row;
+  });
+  html += '</tbody></table>';
+  $("raciTableWrap").innerHTML = html;
+}
+
+/* ---------- Director's dashboard ---------- */
+function renderDashboard(){
+  var tasks = liveTasks();
+  var total = tasks.length;
+  var c = { done:0, working:0, stuck:0, not_started:0 };
+  var overdue = [], soon = [], noDate = [], next7 = [];
+  tasks.forEach(function(t){
+    c[t.status] = (c[t.status]||0) + 1;
+    var di = dueInfo(t);
+    if(di.code === "overdue") overdue.push({ t:t, di:di });
+    if(di.code === "soon") soon.push({ t:t, di:di });
+    if(di.code === "none") noDate.push(t);
+    if(t.status !== "done" && di.days != null && di.days >= 0 && di.days <= 7) next7.push({ t:t, di:di });
+  });
+  var pct = total ? Math.round(c.done/total*100) : 0;
+  var due7 = next7.length;
+  var overall = (overdue.length || c.stuck) ? { cls:"red", label:"Needs attention" }
+              : (soon.length || noDate.length) ? { cls:"amber", label:"Watch closely" }
+              : { cls:"green", label:"On track" };
+
+  /* donut: done green, working blue, stuck red, not started gray */
+  var seg = function(n){ return total ? n/total*360 : 0; };
+  var a1 = seg(c.done), a2 = a1 + seg(c.working), a3 = a2 + seg(c.stuck);
+  var donutBg = total
+    ? "conic-gradient(#2E9E5B 0deg "+a1+"deg, #3B82F6 "+a1+"deg "+a2+"deg, #CC3E3E "+a2+"deg "+a3+"deg, #D5DADD "+a3+"deg 360deg)"
+    : "conic-gradient(#D5DADD 0deg 360deg)";
+
+  var html = "";
+
+  /* hero */
+  html += '<div class="dash-hero">'+
+    '<div><div class="big">'+pct+'<small>%</small></div><div class="hero-label">of mobilisation tasks done</div></div>'+
+    '<div class="hero-bar"><div class="progress"><i style="width:'+pct+'%"></i></div>'+
+      '<div class="hero-label" style="margin-top:6px">'+c.done+' of '+total+' tasks complete · updates live as the team edits</div></div>'+
+    '<div class="hero-stats">'+
+      '<span><b>'+overdue.length+'</b>overdue</span>'+
+      '<span><b>'+c.stuck+'</b>stuck</span>'+
+      '<span><b>'+due7+'</b>due in 7 days</span>'+
+    '</div>'+
+    '<span class="rag-chip '+overall.cls+'"><span class="dot"></span>'+overall.label+'</span>'+
+  '</div>';
+
+  /* KPI cards */
+  html += '<div class="kpi-grid">'+
+    '<div class="kpi '+(overdue.length?"red":"green")+'"><div class="num">'+overdue.length+'</div><div class="lbl">Overdue tasks</div></div>'+
+    '<div class="kpi '+(c.stuck?"red":"green")+'"><div class="num">'+c.stuck+'</div><div class="lbl">Stuck — needs help</div></div>'+
+    '<div class="kpi '+(due7?"amber":"green")+'"><div class="num">'+due7+'</div><div class="lbl">Due in next 7 days</div></div>'+
+    '<div class="kpi '+(noDate.length?"amber":"green")+'"><div class="num">'+noDate.length+'</div><div class="lbl">Missing a due date</div></div>'+
+  '</div>';
+
+  html += '<div class="dash-panels">';
+
+  /* status breakdown */
+  html += '<div class="panel"><h3>Status overview</h3><div class="donut-wrap">'+
+    '<div class="donut" style="background:'+donutBg+'"><div class="pct">'+pct+'%<small>DONE</small></div></div>'+
+    '<div class="donut-legend">'+
+      '<div><span class="sw" style="background:#2E9E5B"></span>Done<b>'+c.done+'</b></div>'+
+      '<div><span class="sw" style="background:#3B82F6"></span>Working on it<b>'+c.working+'</b></div>'+
+      '<div><span class="sw" style="background:#CC3E3E"></span>Stuck — needs help<b>'+c.stuck+'</b></div>'+
+      '<div><span class="sw" style="background:#D5DADD"></span>Not started yet<b>'+c.not_started+'</b></div>'+
+    '</div></div></div>';
+
+  /* workstream health */
+  html += '<div class="panel"><h3>Workstream health</h3>';
+  allWs().forEach(function(w){
+    var wt = tasks.filter(function(t){ return t.ws===w.id; });
+    var dn = wt.filter(function(t){ return t.status==="done"; }).length;
+    var wpct = wt.length ? Math.round(dn/wt.length*100) : 0;
+    var rag = wsRag(wt);
+    var od = wt.filter(function(t){ return dueInfo(t).code==="overdue"; }).length;
+    html += '<div class="wsh-row">'+
+      '<span class="nm"><span class="ws-dot" style="background:'+wsColor(w.id)+'"></span>'+esc(w.name)+
+        (od ? ' <span style="color:var(--rag-red);font-weight:600;font-size:11px">· '+od+' overdue</span>' : '')+'</span>'+
+      '<div class="progress"><i style="width:'+wpct+'%"></i></div>'+
+      '<span class="frac">'+dn+'/'+wt.length+'</span>'+
+      '<span class="rag-chip '+rag.cls+'"><span class="dot"></span>'+rag.label+'</span>'+
+    '</div>';
+  });
+  html += '</div>';
+
+  /* needs attention */
+  var attn = [];
+  overdue.sort(function(a,b){ return a.di.days - b.di.days; }).forEach(function(o){
+    attn.push({ t:o.t, cls:"red", why:dueWhenText(o.di) });
+  });
+  tasks.forEach(function(t){
+    if(t.status==="stuck" && dueInfo(t).code!=="overdue") attn.push({ t:t, cls:"red", why:"stuck" });
+  });
+  noDate.forEach(function(t){ attn.push({ t:t, cls:"amber", why:"no due date" }); });
+  html += '<div class="panel"><h3>Needs attention'+
+    (attn.length ? ' <span class="count-chip" style="background:var(--rag-red-bg);color:var(--rag-red)">'+attn.length+'</span>' : '')+'</h3>';
+  if(attn.length){
+    attn.slice(0,10).forEach(function(a){
+      html += '<div class="attn-item '+a.cls+'"><span class="anum">'+esc(taskNum(a.t))+'</span>'+
+        '<span style="min-width:0">'+esc(a.t.name)+
+        '<span class="ameta">'+esc(a.t.owner||"no owner")+(a.t.due ? ' · due '+esc(fmtDueDate(a.t.due)) : '')+'</span></span>'+
+        '<span class="awhy">'+esc(a.why)+'</span></div>';
+    });
+    if(attn.length > 10) html += '<div class="dash-note">+ '+(attn.length-10)+' more — see the task board</div>';
+  }else{
+    html += '<div class="all-clear">Nothing overdue, nothing stuck. All clear.</div>';
+  }
+  html += '</div>';
+
+  /* coming up */
+  next7.sort(function(a,b){ return a.di.days - b.di.days; });
+  html += '<div class="panel"><h3>Coming up — next 7 days'+
+    (next7.length ? ' <span class="count-chip" style="background:var(--rag-amber-bg);color:var(--rag-amber)">'+next7.length+'</span>' : '')+'</h3>';
+  if(next7.length){
+    next7.slice(0,10).forEach(function(o){
+      var lbl = o.di.days===0 ? "today" : o.di.days===1 ? "tomorrow" : "in "+o.di.days+" days";
+      html += '<div class="attn-item amber"><span class="anum">'+esc(taskNum(o.t))+'</span>'+
+        '<span style="min-width:0">'+esc(o.t.name)+
+        '<span class="ameta">'+esc(o.t.owner||"no owner")+' · '+esc(fmtDueDate(o.t.due))+'</span></span>'+
+        '<span class="awhy">'+lbl+'</span></div>';
+    });
+    if(next7.length > 10) html += '<div class="dash-note">+ '+(next7.length-10)+' more</div>';
+  }else{
+    html += '<div class="all-clear">No deadlines in the next 7 days.</div>';
+  }
+  html += '</div>';
+
+  html += '</div>'; /* dash-panels */
+  html += '<div class="dash-note">This dashboard rebuilds itself from the task board in real time'+
+    (syncStatus==="live" ? " — live sync is on, so it reflects the whole team's latest updates." : ".")+'</div>';
+
+  $("pageDash").innerHTML = html;
+}
+
+/* ---------- render ---------- */
+var pendingEdit = null;
+function render(){
+  renderTimestamp();
+  renderSyncPill();
+  var dash = state.view === "dash";
+  $("pageTasks").style.display = dash ? "none" : "";
+  $("pageDash").style.display = dash ? "" : "none";
+  $("tabTasks").classList.toggle("active", !dash);
+  $("tabDash").classList.toggle("active", dash);
+  if(dash){
+    renderDashboard();
+    return;
+  }
+  $("helpBanner").hidden = !!state.helpDismissed;
+  renderSummary();
+  renderFilters();
+  renderWorkstreams();
+  renderRaci();
+  if(pendingEdit){
+    var pe = pendingEdit; pendingEdit = null;
+    var sel = '.editable[data-id="'+pe.id+'"][data-field="'+pe.field+'"]';
+    var el = document.querySelector(sel);
+    if(el) startInlineEdit(el);
+  }
+}
+
+/* ---------- inline editing ---------- */
+var EDIT_ORDER = ["name","owner","signoff","consulted","informed","notes"];
+
+function startInlineEdit(span){
+  if(span.dataset.editing) return;
+  span.dataset.editing = "1";
+  var id = parseInt(span.dataset.id,10), field = span.dataset.field;
+  var t = findTask(id); if(!t) return;
+  var multiline = (field==="name" || field==="notes");
+  var input = document.createElement(multiline ? "textarea" : "input");
+  if(!multiline) input.type = "text";
+  input.className = "edit-input";
+  input.value = t[field] || "";
+  if(multiline) input.rows = Math.max(2, Math.ceil((t[field]||"").length/60));
+  span.style.display = "none";
+  span.parentNode.insertBefore(input, span.nextSibling);
+  input.focus();
+  input.setSelectionRange(input.value.length, input.value.length);
+
+  var finished = false;
+  function commit(nextField){
+    if(finished) return;
+    finished = true;
+    var v = input.value.trim();
+    if(v !== (t[field]||"")){ recordHistory(); t[field] = v; t.updatedAt = Date.now(); persist(); }
+    if(nextField) pendingEdit = { id:id, field:nextField };
+    render();
+  }
+  input.addEventListener("blur", function(){ setTimeout(function(){ commit(null); }, 0); });
+  input.addEventListener("keydown", function(e){
+    if(e.key==="Enter" && !(multiline && e.shiftKey)){ e.preventDefault(); commit(null); }
+    else if(e.key==="Escape"){ finished = true; render(); }
+    else if(e.key==="Tab"){
+      e.preventDefault();
+      var idx = EDIT_ORDER.indexOf(field);
+      var next = e.shiftKey
+        ? EDIT_ORDER[(idx-1+EDIT_ORDER.length)%EDIT_ORDER.length]
+        : EDIT_ORDER[(idx+1)%EDIT_ORDER.length];
+      commit(next);
+    }
+  });
+}
+
+function startDueEdit(el){
+  if(el.dataset.editing) return;
+  el.dataset.editing = "1";
+  var id = parseInt(el.dataset.id,10);
+  var t = findTask(id); if(!t) return;
+  var input = document.createElement("input");
+  input.type = "date";
+  input.className = "edit-input date";
+  input.value = t.due || "";
+  el.style.display = "none";
+  el.parentNode.insertBefore(input, el.nextSibling);
+  input.focus();
+  if(input.showPicker){ try{ input.showPicker(); }catch(e){} }
+  var finished = false;
+  function commit(){
+    if(finished) return;
+    finished = true;
+    var v = input.value;
+    if(v && v !== (t.due||"")){ recordHistory(); t.due = v; t.updatedAt = Date.now(); persist(); }
+    render();
+  }
+  input.addEventListener("change", commit);
+  input.addEventListener("blur", function(){ setTimeout(commit, 150); });
+  input.addEventListener("keydown", function(e){
+    if(e.key==="Escape"){ finished = true; render(); }
+    if(e.key==="Enter"){ e.preventDefault(); commit(); }
+  });
+}
+
+function startStatusEdit(badgeEl){
+  var id = parseInt(badgeEl.dataset.id,10);
+  var t = findTask(id); if(!t) return;
+  var sel = document.createElement("select");
+  sel.className = "status-select";
+  STATUSES.forEach(function(s){
+    var o = document.createElement("option");
+    o.value = s.key; o.textContent = s.label;
+    if(s.key===t.status) o.selected = true;
+    sel.appendChild(o);
+  });
+  badgeEl.style.display = "none";
+  badgeEl.parentNode.insertBefore(sel, badgeEl.nextSibling);
+  sel.focus();
+  function done(saveIt){
+    if(saveIt && sel.value !== t.status){ recordHistory(); t.status = sel.value; t.updatedAt = Date.now(); persist(); }
+    render();
+  }
+  sel.addEventListener("change", function(){ done(true); });
+  sel.addEventListener("blur", function(){ setTimeout(function(){ done(true); }, 0); });
+  sel.addEventListener("keydown", function(e){ if(e.key==="Escape") done(false); });
+}
+
+/* ---------- undo / redo ----------
+   In-memory snapshots of this device's own edits (synced changes from
+   teammates are never recorded, so undo won't surprise-revert their work
+   except where it overlapped the undone change). Restoring stamps changed
+   rows with a fresh updatedAt so the restore also wins over live sync. */
+var undoStack = [], redoStack = [], HISTORY_LIMIT = 50;
+var TASK_FIELDS = ["ws","num","name","owner","signoff","consulted","informed","due","dueHint","status","notes","deleted"];
+function historySnapshot(){
+  return JSON.stringify({ tasks: state.tasks, customWs: state.customWs, nextId: state.nextId });
+}
+function recordHistory(){
+  undoStack.push(historySnapshot());
+  if(undoStack.length > HISTORY_LIMIT) undoStack.shift();
+  redoStack.length = 0;
+  updateUndoButtons();
+}
+function applyHistorySnapshot(json){
+  var snap = JSON.parse(json), now = Date.now();
+  var byId = {}, snapIds = {};
+  state.tasks.forEach(function(t){ byId[t.id] = t; });
+  snap.tasks.forEach(function(st){
+    snapIds[st.id] = true;
+    var c = byId[st.id];
+    if(!c){ st.updatedAt = now; state.tasks.push(st); return; }
+    var diff = TASK_FIELDS.some(function(f){ return c[f] !== st[f]; });
+    if(diff){ TASK_FIELDS.forEach(function(f){ c[f] = st[f]; }); c.updatedAt = now; }
+  });
+  // Tasks created after the snapshot become tombstones so the removal syncs.
+  state.tasks.forEach(function(t){
+    if(!snapIds[t.id] && !t.deleted){ t.deleted = true; t.updatedAt = now; }
+  });
+  var wsById = {}, snapWsIds = {};
+  state.customWs.forEach(function(w){ wsById[w.id] = w; });
+  snap.customWs.forEach(function(sw){
+    snapWsIds[sw.id] = true;
+    var c = wsById[sw.id];
+    if(!c){ sw.updatedAt = now; state.customWs.push(sw); }
+    else if(c.name !== sw.name || !!c.deleted !== !!sw.deleted){
+      c.name = sw.name; c.deleted = !!sw.deleted; c.updatedAt = now;
+    }
+  });
+  // Workstream entries created after the snapshot: revert a built-in rename
+  // to its original name, tombstone an added workstream so the removal syncs.
+  state.customWs.forEach(function(w){
+    if(snapWsIds[w.id]) return;
+    var builtin = null;
+    WORKSTREAMS.forEach(function(b){ if(b.id===w.id) builtin = b; });
+    if(builtin){ if(w.name !== builtin.name){ w.name = builtin.name; w.updatedAt = now; } }
+    else if(!w.deleted){ w.deleted = true; w.updatedAt = now; }
+  });
+  state.nextId = Math.max(state.nextId, parseInt(snap.nextId,10)||1);
+  persist();
+  render();
+}
+function doUndo(){
+  if(!undoStack.length) return;
+  redoStack.push(historySnapshot());
+  applyHistorySnapshot(undoStack.pop());
+  updateUndoButtons();
+  toast("Undone.", null, null, 2000);
+}
+function doRedo(){
+  if(!redoStack.length) return;
+  undoStack.push(historySnapshot());
+  applyHistorySnapshot(redoStack.pop());
+  updateUndoButtons();
+  toast("Redone.", null, null, 2000);
+}
+function updateUndoButtons(){
+  $("btnUndo").disabled = !undoStack.length;
+  $("btnRedo").disabled = !redoStack.length;
+}
+$("btnUndo").addEventListener("click", doUndo);
+$("btnRedo").addEventListener("click", doRedo);
+document.addEventListener("keydown", function(e){
+  if(!(e.ctrlKey || e.metaKey)) return;
+  var tag = (document.activeElement && document.activeElement.tagName || "").toLowerCase();
+  if(tag==="input" || tag==="textarea" || tag==="select") return;  // native text undo
+  if(e.key==="z" || e.key==="Z"){ e.preventDefault(); if(e.shiftKey) doRedo(); else doUndo(); }
+  else if(e.key==="y" || e.key==="Y"){ e.preventDefault(); doRedo(); }
+});
+
+/* ---------- add / delete / undo ---------- */
+function addTask(wsId){
+  recordHistory();
+  var minor = 0;
+  state.tasks.forEach(function(t){
+    if(t.ws===wsId){
+      var m = /^\d+\.(\d+)$/.exec(t.num||"");
+      if(m) minor = Math.max(minor, parseInt(m[1],10));
+    }
+  });
+  var t = {
+    id: state.nextId++, ws: wsId, num: wsId + "." + (minor+1),
+    name: "New task", owner: "", signoff: "", consulted: "", informed: "",
+    due: "", dueHint: "", status: "not_started", notes: "", deleted: false, updatedAt: Date.now()
+  };
+  state.tasks.push(t);
+  persist();
+  state.collapsed[wsId] = false;
+  pendingEdit = { id:t.id, field:"name" };
+  render();
+}
+function addWorkstream(){
+  var name = prompt("Name the new workstream:");
+  if(name == null) return;
+  name = name.trim();
+  if(!name){ toast("The workstream needs a name.", null, null, 3500); return; }
+  recordHistory();
+  var maxId = 0;  // include tombstoned workstreams so ids are never reused
+  WORKSTREAMS.concat(state.customWs).forEach(function(w){ maxId = Math.max(maxId, w.id); });
+  state.customWs.push({ id: maxId+1, name: name, deleted: false, updatedAt: Date.now() });
+  persist();
+  render();
+  toast('Workstream '+(maxId+1)+' — "'+name+'" added. It syncs to the whole team.', null, null, 4500);
+}
+function renameWorkstream(id){
+  var w = null;
+  allWs().forEach(function(x){ if(x.id===id) w = x; });
+  if(!w) return;
+  var name = prompt("Rename workstream "+id+":", w.name);
+  if(name == null) return;
+  name = name.trim();
+  if(!name || name === w.name) return;
+  recordHistory();
+  var entry = null;
+  state.customWs.forEach(function(x){ if(x.id===id) entry = x; });
+  if(entry){ entry.name = name; entry.updatedAt = Date.now(); }
+  else state.customWs.push({ id:id, name:name, deleted:false, updatedAt: Date.now() });
+  persist();
+  render();
+}
+function deleteTask(id){
+  var t = findTask(id); if(!t) return;
+  recordHistory();
+  // Deleted tasks stay as hidden tombstones so the deletion also
+  // reaches other devices when live sync is on.
+  t.deleted = true;
+  t.updatedAt = Date.now();
+  persist();
+  render();
+  toast('Deleted "'+ (t.name.length>40 ? t.name.slice(0,40)+"…" : t.name) +'"', "Undo", function(){
+    recordHistory();
+    t.deleted = false;
+    t.updatedAt = Date.now();
+    persist();
+    render();
+  }, 5000);
+}
+
+/* ---------- edit modal ---------- */
+var editModalTaskId = null;
+function openEditModal(id){
+  var t = findTask(id); if(!t) return;
+  editModalTaskId = id;
+  $("editModalTitle").textContent = "Edit task " + taskNum(t);
+  $("emName").value = t.name||"";
+  $("emOwner").value = t.owner||"";
+  $("emSignoff").value = t.signoff||"";
+  $("emConsulted").value = t.consulted||"";
+  $("emInformed").value = t.informed||"";
+  $("emDue").value = ISO_RE.test(t.due||"") ? t.due : "";
+  $("emDueHint").value = t.dueHint||"";
+  $("emNotes").value = t.notes||"";
+  var sel = $("emStatus");
+  sel.innerHTML = "";
+  STATUSES.forEach(function(s){
+    var o = document.createElement("option");
+    o.value=s.key; o.textContent=s.label; if(s.key===t.status) o.selected=true;
+    sel.appendChild(o);
+  });
+  openOverlay("editOverlay");
+}
+$("btnSaveEdit").addEventListener("click", function(){
+  var t = findTask(editModalTaskId); if(!t){ closeOverlay("editOverlay"); return; }
+  var due = $("emDue").value;
+  if(!due){
+    toast("Please pick a due date — every task needs one.", null, null, 3500);
+    return;
+  }
+  recordHistory();
+  t.name = $("emName").value.trim();
+  t.owner = $("emOwner").value.trim();
+  t.signoff = $("emSignoff").value.trim();
+  t.consulted = $("emConsulted").value.trim();
+  t.informed = $("emInformed").value.trim();
+  t.due = due;
+  t.dueHint = $("emDueHint").value.trim();
+  t.status = $("emStatus").value;
+  t.notes = $("emNotes").value.trim();
+  t.updatedAt = Date.now();
+  persist();
+  closeOverlay("editOverlay");
+  render();
+});
+
+/* ---------- overlays ---------- */
+function openOverlay(id){ $(id).classList.add("open"); }
+function closeOverlay(id){ $(id).classList.remove("open"); }
+document.querySelectorAll("[data-close]").forEach(function(b){
+  b.addEventListener("click", function(){ closeOverlay(b.dataset.close); });
+});
+document.querySelectorAll(".overlay").forEach(function(ov){
+  ov.addEventListener("mousedown", function(e){ if(e.target===ov) closeOverlay(ov.id); });
+});
+
+/* ---------- export / import / share ---------- */
+function exportPayload(){
+  return JSON.stringify({
+    app: "smf_sd_tracker", version: 2,
+    exportedAt: new Date().toISOString(),
+    nextId: state.nextId,
+    customWs: state.customWs,
+    sync: (state.sync && state.sync.url) ? { url: state.sync.url } : undefined,
+    tasks: liveTasks()
+  }, null, 2);
+}
+$("btnExport").addEventListener("click", function(){
+  $("exportText").value = exportPayload();
+  openOverlay("exportOverlay");
+});
+$("btnCopyExport").addEventListener("click", function(){
+  copyText($("exportText").value, "Copied — paste it to your colleague.");
+});
+$("btnDownloadJson").addEventListener("click", function(){
+  var blob = new Blob([$("exportText").value], { type:"application/json" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "SMF_SD_Tracker_" + new Date().toISOString().slice(0,10) + ".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+});
+$("btnImport").addEventListener("click", function(){
+  $("importText").value = ""; $("importLink").value = "";
+  openOverlay("importOverlay");
+});
+$("btnDoImport").addEventListener("click", function(){
+  var raw = $("importText").value.trim();
+  var link = $("importLink").value.trim();
+  var data = null;
+  try{
+    if(raw){ data = JSON.parse(raw); }
+    else if(link){ data = decodeShareFragment(link); }
+  }catch(e){ data = null; }
+  if(!data || !Array.isArray(data.tasks)){
+    toast("That doesn't look like valid tracker data. Check what you pasted.", null, null, 4000);
+    return;
+  }
+  if(!confirm("Import this data? It will REPLACE everything currently saved on this device.")) return;
+  applyImport(data);
+  adoptSyncFrom(data);
+  closeOverlay("importOverlay");
+  toast("Imported " + liveTasks().length + " tasks.", null, null, 3000);
+});
+function normalizeTask(t){
+  return {
+    id: parseInt(t.id,10) || 0, ws: parseInt(t.ws,10) || 1, num: String(t.num||""),
+    name: String(t.name||""), owner: String(t.owner||""),
+    signoff: String(t.signoff||""), consulted: String(t.consulted||""),
+    informed: String(t.informed||""),
+    due: ISO_RE.test(String(t.due||"")) ? String(t.due) : "",
+    dueHint: String(t.dueHint||""),
+    status: STATUSES.some(function(s){ return s.key===t.status; }) ? t.status : "not_started",
+    notes: String(t.notes||""), deleted: !!t.deleted,
+    updatedAt: parseInt(t.updatedAt,10) || Date.now()
+  };
+}
+function applyImport(data){
+  recordHistory();
+  var maxId = 0;
+  var tasks = data.tasks.map(function(t){
+    var n = normalizeTask(t);
+    // Older exports kept free text in due — preserve it as the timing note.
+    if(!n.due && t.due && !ISO_RE.test(String(t.due)) && !n.dueHint) n.dueHint = String(t.due);
+    maxId = Math.max(maxId, n.id);
+    return n;
+  });
+  tasks.forEach(function(t){ if(!t.id) t.id = ++maxId; });
+  state.tasks = tasks;
+  if(Array.isArray(data.customWs)) state.customWs = data.customWs.map(normalizeWsEntry).filter(Boolean);
+  state.nextId = Math.max(maxId+1, parseInt(data.nextId,10)||0, 1);
+  persist();
+  render();
+}
+function adoptSyncFrom(data){
+  if(data.sync && data.sync.url && data.sync.url !== (state.sync && state.sync.url)){
+    state.sync = { url: String(data.sync.url) };
+    persist(false);
+    connectSync();
+    toast("Live sync joined automatically — you now see everyone's updates.", null, null, 4500);
+  }
+}
+
+function b64urlEncode(str){
+  return btoa(unescape(encodeURIComponent(str))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function b64urlDecode(str){
+  str = str.replace(/-/g,"+").replace(/_/g,"/");
+  while(str.length % 4) str += "=";
+  return decodeURIComponent(escape(atob(str)));
+}
+function shareLink(){
+  var base = location.href.split("#")[0];
+  // With live sync on, the data lives in the shared database — the link
+  // only needs to carry the connection, which keeps it short.
+  if(state.sync && state.sync.url){
+    // On the team database the page itself carries the connection, so the
+    // plain address is enough — use the folder URL, which is shortest.
+    if(state.sync.url === DEFAULT_SYNC_URL && location.protocol !== "file:"){
+      return base.replace(/SMF_SD_Mobilisation_Tracker\.html$/, "");
+    }
+    return base + "#join=" + b64urlEncode(JSON.stringify({ url: state.sync.url }));
+  }
+  var payload = JSON.stringify({
+    app:"smf_sd_tracker", version:2, nextId:state.nextId,
+    customWs: state.customWs,
+    tasks:liveTasks()
+  });
+  return base + "#data=" + b64urlEncode(payload);
+}
+function decodeShareFragment(link){
+  var m = /#data=([A-Za-z0-9\-_]+)/.exec(link);
+  if(!m) return null;
+  return JSON.parse(b64urlDecode(m[1]));
+}
+function decodeJoinFragment(link){
+  var m = /#join=([A-Za-z0-9\-_]+)/.exec(link);
+  if(!m) return null;
+  return JSON.parse(b64urlDecode(m[1]));
+}
+
+/* ---------- Excel download ----------
+   Builds a genuine .xlsx with no libraries: an xlsx file is a zip of XML
+   parts, and zip entries can be "stored" (uncompressed), which only needs
+   a CRC32 — so the file opens cleanly in Excel and Google Sheets. */
+function crc32(bytes){
+  if(!crc32.table){
+    crc32.table = [];
+    for(var n=0;n<256;n++){
+      var c = n;
+      for(var k=0;k<8;k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      crc32.table[n] = c >>> 0;
+    }
+  }
+  var crc = 0xFFFFFFFF;
+  for(var i=0;i<bytes.length;i++) crc = (crc >>> 8) ^ crc32.table[(crc ^ bytes[i]) & 0xFF];
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+function zipU16(n){ return [n & 255, (n >> 8) & 255]; }
+function zipU32(n){ return [n & 255, (n >> 8) & 255, (n >> 16) & 255, (n >>> 24) & 255]; }
+function makeZip(files){
+  var enc = new TextEncoder();
+  var chunks = [], central = [], offset = 0, centralSize = 0;
+  files.forEach(function(f){
+    var nameB = enc.encode(f.name), data = enc.encode(f.text), crc = crc32(data);
+    // flag 0x0800 = UTF-8 names; method 0 = stored
+    var local = new Uint8Array([].concat(
+      zipU32(0x04034b50), zipU16(20), zipU16(0x0800), zipU16(0), zipU16(0), zipU16(0),
+      zipU32(crc), zipU32(data.length), zipU32(data.length), zipU16(nameB.length), zipU16(0)));
+    chunks.push(local, nameB, data);
+    central.push({ head: new Uint8Array([].concat(
+      zipU32(0x02014b50), zipU16(20), zipU16(20), zipU16(0x0800), zipU16(0), zipU16(0), zipU16(0),
+      zipU32(crc), zipU32(data.length), zipU32(data.length), zipU16(nameB.length),
+      zipU16(0), zipU16(0), zipU16(0), zipU16(0), zipU32(0), zipU32(offset))), name: nameB });
+    offset += local.length + nameB.length + data.length;
+  });
+  central.forEach(function(c){ chunks.push(c.head, c.name); centralSize += c.head.length + c.name.length; });
+  chunks.push(new Uint8Array([].concat(
+    zipU32(0x06054b50), zipU16(0), zipU16(0), zipU16(files.length), zipU16(files.length),
+    zipU32(centralSize), zipU32(offset), zipU16(0))));
+  return new Blob(chunks, { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+}
+function xmlEsc(s){
+  return String(s == null ? "" : s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,"");  // chars XML 1.0 forbids
+}
+function colLetter(i){
+  var s = ""; i++;
+  while(i){ var m = (i-1) % 26; s = String.fromCharCode(65+m) + s; i = (i-m-1) / 26; }
+  return s;
+}
+function buildXlsxBlob(){
+  var rows = [["No.","Workstream","Task","Doing it","Signs off","Needs to be asked","Gets update","Status","Due date","Timing note","Notes"]];
+  allWs().forEach(function(w){
+    wsTasks(w.id).forEach(function(t){
+      rows.push([ taskNum(t), "WS "+w.id+" — "+w.name, t.name, t.owner, t.signoff,
+                  t.consulted, t.informed, statusLabel(t.status), t.due||"", t.dueHint||"", t.notes||"" ]);
+    });
+  });
+  var widths = [7,28,52,22,22,24,24,16,12,18,40];
+  var cols = '<cols>' + widths.map(function(wd,i){
+    return '<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+wd+'" customWidth="1"/>';
+  }).join("") + '</cols>';
+  var body = rows.map(function(r,ri){
+    return '<row r="'+(ri+1)+'">' + r.map(function(v,ci){
+      return '<c r="'+colLetter(ci)+(ri+1)+'" t="inlineStr"'+(ri===0?' s="1"':'')+
+        '><is><t xml:space="preserve">'+xmlEsc(v)+'</t></is></c>';
+    }).join("") + '</row>';
+  }).join("");
+  var XMLH = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+  return makeZip([
+    { name:"[Content_Types].xml", text: XMLH +
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'+
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'+
+      '<Default Extension="xml" ContentType="application/xml"/>'+
+      '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+
+      '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'+
+      '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+
+      '</Types>' },
+    { name:"_rels/.rels", text: XMLH +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'+
+      '</Relationships>' },
+    { name:"xl/workbook.xml", text: XMLH +
+      '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'+
+      '<sheets><sheet name="Mobilisation Tracker" sheetId="1" r:id="rId1"/></sheets></workbook>' },
+    { name:"xl/_rels/workbook.xml.rels", text: XMLH +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'+
+      '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'+
+      '</Relationships>' },
+    { name:"xl/styles.xml", text: XMLH +
+      '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+      '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>'+
+      '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>'+
+      '<borders count="1"><border/></borders>'+
+      '<cellStyleXfs count="1"><xf/></cellStyleXfs>'+
+      '<cellXfs count="2"><xf xfId="0"/><xf xfId="0" fontId="1" applyFont="1"/></cellXfs>'+
+      '</styleSheet>' },
+    { name:"xl/worksheets/sheet1.xml", text: XMLH +
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+      cols + '<sheetData>' + body + '</sheetData></worksheet>' }
+  ]);
+}
+$("btnExcel").addEventListener("click", function(){
+  var blob = buildXlsxBlob();
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "SMF_SD_Mobilisation_Tracker_" + new Date().toISOString().slice(0,10) + ".xlsx";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  toast("Excel file downloaded — every workstream and task is in it.", null, null, 3500);
+});
+
+/* ---------- share dialog ---------- */
+function shareCopyHtml(){
+  var payload = JSON.stringify({
+    app: "smf_sd_tracker", version: 2,
+    nextId: state.nextId,
+    customWs: state.customWs,
+    sync: (state.sync && state.sync.url) ? { url: state.sync.url } : undefined,
+    tasks: liveTasks()
+  }).replace(/<\//g, "<\\/");
+  var html = SOURCE_HTML.replace(/<script id="bootstrapData"[^>]*>[\s\S]*?<\/script>\s*/, "");
+  var tag = '<script id="bootstrapData" type="application/json">' + payload + '</' + 'script>\n';
+  var idx = html.indexOf("<script>");
+  return idx === -1 ? html + tag : html.slice(0, idx) + tag + html.slice(idx);
+}
+function renderShareModal(){
+  var isFile = location.protocol === "file:";
+  var syncOn = !!(state.sync && state.sync.url);
+  var link = shareLink();
+  var html = "";
+
+  html += '<div class="share-sec"><h4>Send the tracker file — works for everyone</h4>'+
+    '<p class="hint">Downloads a copy of this tracker with all current tasks'+(syncOn?' and the live-sync connection':'')+' built in. '+
+    'Send it on WhatsApp or email; colleagues just open it in their browser'+(syncOn?' and they’re connected live automatically':'')+'.</p>'+
+    '<button class="btn btn-primary" id="btnShareCopyFile">Download a ready-to-share copy</button></div>';
+
+  html += '<div class="share-sec"><h4>Or copy a link</h4>';
+  if(isFile){
+    html += '<div class="warn-box">This tracker is open as a <strong>file on this device</strong>, so the link below points to a location only this device can see — it will NOT open on anyone else’s phone or computer. Use the file option above, or host the tracker on a website to get a real shareable address.</div>';
+  }
+  if(syncOn && state.sync.url === DEFAULT_SYNC_URL && !isFile){
+    html += '<p class="hint">The team connection is built into the page itself, so the link is just the web address — anyone who opens it joins the shared tracker automatically.</p>';
+  }else if(syncOn){
+    html += '<p class="hint">Live sync is on, so this link is short — it carries only the connection. Anyone who opens it joins the shared tracker'+(isFile?' (once the tracker is hosted on a website)':'')+'.</p>';
+  }else{
+    html += '<p class="hint">Live sync is off, so the link must carry every task inside it — that’s why it’s long. Turn on live sync (⚙ menu) to get a short link and automatic updates.</p>';
+  }
+  html += '<div class="link-row"><input type="text" readonly id="shareLinkBox" value="'+esc(link)+'">'+
+    '<button class="btn" id="btnCopyShareLink">Copy</button></div></div>';
+
+  $("shareBody").innerHTML = html;
+  $("btnShareCopyFile").addEventListener("click", function(){
+    var blob = new Blob([shareCopyHtml()], { type:"text/html" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "SMF_SD_Tracker_share.html";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+    toast("Share copy downloaded — send the file to your team.", null, null, 4000);
+  });
+  $("btnCopyShareLink").addEventListener("click", function(){
+    copyText(link, "Link copied.");
+  });
+}
+$("btnShareLink").addEventListener("click", function(){
+  renderShareModal();
+  openOverlay("shareOverlay");
+});
+function copyText(text, okMsg){
+  function fallback(){
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); toast(okMsg, null, null, 3500); }
+    catch(e){ toast("Couldn't copy automatically — select and copy manually.", null, null, 4000); }
+    ta.remove();
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){ toast(okMsg, null, null, 3500); }, fallback);
+  }else fallback();
+}
+
+/* ---------- live sync (Firebase Realtime Database over REST + SSE) ----------
+   Local-first: localStorage stays the source of truth on this device.
+   When a database URL is configured we PUT the whole document on every
+   change (debounced) and listen via EventSource for everyone else's PUTs.
+   Conflicts resolve per task: the newer updatedAt wins. */
+var clientId = Math.random().toString(36).slice(2) + Date.now().toString(36);
+var es = null, pushTimer = null, retryTimer = null;
+var syncStatus = "local"; // local | connecting | live | offline
+
+function syncDocUrl(){
+  var u = (state.sync && state.sync.url || "").trim();
+  if(!u) return null;
+  u = u.replace(/\/+$/,"").replace(/\.json$/,"");
+  try{
+    var p = new URL(u);
+    if(p.protocol !== "https:") return null;
+    if(p.pathname === "" || p.pathname === "/") u += "/smf_sd_tracker";
+  }catch(e){ return null; }
+  return u + ".json";
+}
+function setSyncStatus(s){
+  if(syncStatus === s) return;
+  syncStatus = s;
+  renderSyncPill();
+}
+function renderSyncPill(){
+  var map = {
+    local:      ["local",      "Local only"],
+    connecting: ["connecting", "Connecting…"],
+    live:       ["live",       "Live sync on"],
+    offline:    ["offline",    "Sync offline — saving here"]
+  };
+  var m = map[syncStatus] || map.local;
+  $("syncPill").className = "sync-pill " + m[0];
+  $("syncPillText").textContent = m[1];
+}
+function disconnectSync(){
+  if(es){ es.close(); es = null; }
+  clearTimeout(pushTimer);
+  clearTimeout(retryTimer);
+}
+function connectSync(){
+  disconnectSync();
+  var url = syncDocUrl();
+  if(!url){ setSyncStatus("local"); return; }
+  setSyncStatus("connecting");
+  try{ es = new EventSource(url); }
+  catch(e){ setSyncStatus("offline"); return; }
+  es.addEventListener("put", function(ev){
+    setSyncStatus("live");
+    var msg; try{ msg = JSON.parse(ev.data); }catch(e){ return; }
+    if(!msg) return;
+    if(msg.path === "/"){
+      if(msg.data == null){ schedulePush(); }   // empty database: seed it with our data
+      else applyRemote(msg.data);
+    }else{
+      refetchRemote();
+    }
+  });
+  es.addEventListener("patch", refetchRemote);
+  es.onerror = function(){
+    // EventSource retries automatically; show the user we're degraded.
+    if(syncStatus !== "local") setSyncStatus("offline");
+  };
+}
+function refetchRemote(){
+  var url = syncDocUrl(); if(!url) return;
+  fetch(url).then(function(r){ return r.json(); }).then(function(d){ if(d) applyRemote(d); })
+    .catch(function(){ setSyncStatus("offline"); });
+}
+function applyRemote(doc){
+  if(!doc || doc.clientId === clientId) return;  // our own echo
+  var remoteTasks = Array.isArray(doc.tasks) ? doc.tasks
+                  : (doc.tasks && typeof doc.tasks === "object") ? Object.keys(doc.tasks).map(function(k){ return doc.tasks[k]; })
+                  : [];
+  var changed = false, needPush = false;
+  var byId = {};
+  state.tasks.forEach(function(t){ byId[t.id] = t; });
+  var remoteIds = {};
+  remoteTasks.forEach(function(raw){
+    if(!raw) return;
+    var rt = normalizeTask(raw);
+    remoteIds[rt.id] = true;
+    var lt = byId[rt.id];
+    if(!lt){
+      state.tasks.push(rt);
+      changed = true;
+    }else if(rt.updatedAt > (lt.updatedAt||0)){
+      for(var k in rt) lt[k] = rt[k];
+      changed = true;
+    }else if(rt.updatedAt < (lt.updatedAt||0)){
+      needPush = true;  // we hold the newer version of this task
+    }
+  });
+  state.tasks.forEach(function(t){ if(!remoteIds[t.id]) needPush = true; });
+  /* custom workstreams merge the same way tasks do: newer updatedAt wins */
+  var remoteWs = Array.isArray(doc.customWs) ? doc.customWs
+               : (doc.customWs && typeof doc.customWs === "object") ? Object.keys(doc.customWs).map(function(k){ return doc.customWs[k]; })
+               : [];
+  var wsById = {};
+  state.customWs.forEach(function(w){ wsById[w.id] = w; });
+  var remoteWsIds = {};
+  remoteWs.forEach(function(raw){
+    var rw = normalizeWsEntry(raw);
+    if(!rw) return;
+    remoteWsIds[rw.id] = true;
+    var lw = wsById[rw.id];
+    if(!lw){ state.customWs.push(rw); changed = true; }
+    else if(rw.updatedAt > (lw.updatedAt||0)){ lw.name = rw.name; lw.deleted = rw.deleted; lw.updatedAt = rw.updatedAt; changed = true; }
+    else if(rw.updatedAt < (lw.updatedAt||0)){ needPush = true; }
+  });
+  state.customWs.forEach(function(w){ if(!remoteWsIds[w.id]) needPush = true; });
+  var rNext = parseInt(doc.nextId,10) || 0;
+  if(rNext > state.nextId){ state.nextId = rNext; changed = true; }
+  else if(rNext < state.nextId){ needPush = true; }
+  if(changed){
+    state.lastUpdated = Math.max(state.lastUpdated||0, parseInt(doc.lastUpdated,10)||0);
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
+    // Don't yank the keyboard away mid-edit; re-render once the field closes.
+    if(!document.querySelector(".edit-input, .status-select")) render();
+    else renderTimestamp();
+  }
+  if(needPush) schedulePush();
+}
+function schedulePush(){
+  if(!syncDocUrl()) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(pushNow, 500);
+}
+function pushNow(){
+  var url = syncDocUrl(); if(!url) return;
+  var body = JSON.stringify({
+    clientId: clientId,
+    lastUpdated: state.lastUpdated,
+    nextId: state.nextId,
+    customWs: state.customWs,
+    tasks: state.tasks
+  });
+  fetch(url, { method:"PUT", body: body }).then(function(r){
+    if(r.ok){ setSyncStatus("live"); }
+    else{ setSyncStatus("offline"); retryPushLater(); }
+  }).catch(function(){
+    setSyncStatus("offline");
+    retryPushLater();
+  });
+}
+function retryPushLater(){
+  clearTimeout(retryTimer);
+  retryTimer = setTimeout(schedulePush, 5000);
+}
+window.addEventListener("online", function(){ if(syncDocUrl()){ connectSync(); schedulePush(); } });
+
+function openSyncModal(){
+  $("syncUrlInput").value = (state.sync && state.sync.url) || "";
+  openOverlay("syncOverlay");
+}
+$("syncPill").addEventListener("click", openSyncModal);
+$("btnSyncSetup").addEventListener("click", function(){
+  $("gearMenu").classList.remove("open");
+  openSyncModal();
+});
+$("btnSyncConnect").addEventListener("click", function(){
+  var u = $("syncUrlInput").value.trim();
+  if(!u){ toast("Paste the database URL first.", null, null, 3500); return; }
+  state.sync = { url: u };
+  if(!syncDocUrl()){
+    toast("That doesn't look like a valid https:// database URL.", null, null, 4000);
+    state.sync = { url: "" };
+    return;
+  }
+  persist(false);
+  closeOverlay("syncOverlay");
+  connectSync();
+  schedulePush();
+  toast("Live sync on. Now click “Copy share link” and send it to the team.", null, null, 5000);
+});
+$("btnSyncOff").addEventListener("click", function(){
+  if(!confirm("Turn off live sync on this device?\n\nThis device will stop seeing the team's updates, and the team will stop seeing changes made here, until sync is reconnected.")) return;
+  // optOut stops the baked-in team database from auto-reconnecting on reload.
+  state.sync = { url: "", optOut: true };
+  persist(false);
+  disconnectSync();
+  setSyncStatus("local");
+  closeOverlay("syncOverlay");
+  toast("Live sync turned off. Data stays on this device only.", null, null, 3500);
+});
+
+/* ---------- print ---------- */
+$("btnPrint").addEventListener("click", function(){
+  document.body.classList.add("print-preview");
+  window.print();
+});
+window.addEventListener("afterprint", function(){
+  document.body.classList.remove("print-preview");
+});
+
+/* ---------- view tabs ---------- */
+function setView(v){
+  state.view = v;
+  persist(false);
+  render();
+}
+$("tabTasks").addEventListener("click", function(){ setView("tasks"); });
+$("tabDash").addEventListener("click", function(){ setView("dash"); });
+
+/* ---------- settings / help ---------- */
+$("btnGear").addEventListener("click", function(e){
+  e.stopPropagation();
+  $("gearMenu").classList.toggle("open");
+});
+$("btnDismissHelp").addEventListener("click", function(){
+  state.helpDismissed = true;
+  persist(false);
+  render();
+});
+$("legendMore").addEventListener("click", function(){
+  state.helpDismissed = false;
+  persist(false);
+  render();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+$("btnShowHelp").addEventListener("click", function(){
+  $("gearMenu").classList.remove("open");
+  state.helpDismissed = false;
+  state.view = "tasks";
+  persist(false);
+  render();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+/* ---------- filter events ---------- */
+$("fWs").addEventListener("change", function(){ state.filters.ws = this.value; persist(false); render(); });
+$("fStatus").addEventListener("change", function(){ state.filters.status = this.value; persist(false); render(); });
+$("fOwner").addEventListener("change", function(){ state.filters.owner = this.value; persist(false); render(); });
+$("btnClearFilters").addEventListener("click", function(){
+  state.filters = { ws:"all", status:"all", owner:"all" };
+  persist(false);
+  render();
+});
+
+/* ---------- delegated clicks ---------- */
+document.addEventListener("click", function(e){
+  if(!e.target.closest(".row-menu-wrap")){
+    document.querySelectorAll(".row-menu.open").forEach(function(m){ m.classList.remove("open"); });
+  }
+  if(!e.target.closest(".gear-wrap")) $("gearMenu").classList.remove("open");
+
+  var el = e.target.closest("[data-act]");
+  if(!el) return;
+  var act = el.dataset.act;
+  if(act==="toggle-ws"){
+    var w = parseInt(el.dataset.ws,10);
+    state.collapsed[w] = !state.collapsed[w];
+    persist(false);
+    render();
+  }else if(act==="edit"){
+    startInlineEdit(el);
+  }else if(act==="edit-due"){
+    startDueEdit(el);
+  }else if(act==="status"){
+    startStatusEdit(el);
+  }else if(act==="row-menu"){
+    e.stopPropagation();
+    var menu = $("rowmenu-"+el.dataset.id);
+    var wasOpen = menu.classList.contains("open");
+    document.querySelectorAll(".row-menu.open").forEach(function(m){ m.classList.remove("open"); });
+    if(!wasOpen) menu.classList.add("open");
+  }else if(act==="edit-modal"){
+    openEditModal(parseInt(el.dataset.id,10));
+  }else if(act==="delete"){
+    deleteTask(parseInt(el.dataset.id,10));
+  }else if(act==="add-task"){
+    addTask(parseInt(el.dataset.ws,10));
+  }else if(act==="add-ws"){
+    addWorkstream();
+  }else if(act==="rename-ws"){
+    renameWorkstream(parseInt(el.dataset.ws,10));
+  }
+});
+$("raciHead").addEventListener("click", function(){
+  state.raciCollapsed = !state.raciCollapsed;
+  persist(false);
+  render();
+});
+
+/* Keep multiple open tabs on the same device in sync */
+window.addEventListener("storage", function(e){
+  if(e.key === LS_KEY && e.newValue){
+    load();
+    render();
+  }
+});
+
+/* Refresh due-date RAG colours when a new day starts while the page is open */
+setInterval(function(){ if(!document.querySelector(".edit-input, .status-select")) render(); }, 10*60*1000);
+
+/* ---------- auto-update ----------
+   The deploy workflow stamps BUILD_ID with the commit SHA. Open pages poll
+   for a newer build (the unique query string skips the CDN cache) and reload
+   themselves, so changes pushed to the site reach every device without a
+   manual refresh. */
+var BUILD_ID = "612eefdf13c27a3822389183cfd2efee4245030f";
+function checkForUpdate(){
+  if(location.protocol === "file:" || !/^[0-9a-f]{7,40}$/.test(BUILD_ID)) return;
+  fetch(location.pathname + "?upd=" + Date.now(), { cache:"no-store" })
+    .then(function(r){ return r.ok ? r.text() : ""; })
+    .then(function(html){
+      var m = new RegExp('var BUILD_ID = "([0-9a-f]{7,40})"').exec(html);
+      if(m && m[1] !== BUILD_ID) applyUpdate(m[1]);
+    })
+    .catch(function(){ /* offline — next interval will retry */ });
+}
+function applyUpdate(newBuild){
+  // Never reload mid-edit, and never twice for the same build — a stale CDN
+  // response served after the reload would otherwise loop forever.
+  if(document.querySelector(".edit-input, .status-select")){ setTimeout(checkForUpdate, 60000); return; }
+  var key = "smf_reloaded_" + newBuild;
+  try{
+    if(sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+  }catch(e){ return; }
+  toast("A newer version of the tracker is available — updating…", null, null, 2500);
+  setTimeout(function(){ location.reload(); }, 1200);
+}
+setTimeout(checkForUpdate, 4000);
+setInterval(checkForUpdate, 5*60*1000);
+document.addEventListener("visibilitychange", function(){ if(!document.hidden) checkForUpdate(); });
+
+/* ---------- boot ---------- */
+load();
+// Share-link import: handle #data= (full snapshot) and #join= (live sync invite).
+(function(){
+  if(!location.hash) return;
+  if(location.hash.indexOf("#data=")===0){
+    var data = null;
+    try{ data = decodeShareFragment(location.hash); }catch(e){}
+    history.replaceState(null, "", location.pathname + location.search);
+    if(data && Array.isArray(data.tasks)){
+      if(confirm("This link carries shared tracker data ("+data.tasks.length+" tasks).\n\nLoad it? It will replace the data saved on this device.")){
+        applyImport(data);
+        adoptSyncFrom(data);
+      }
+    }
+  }else if(location.hash.indexOf("#join=")===0){
+    var join = null;
+    try{ join = decodeJoinFragment(location.hash); }catch(e){}
+    history.replaceState(null, "", location.pathname + location.search);
+    if(join && join.url && String(join.url) !== (state.sync && state.sync.url)){
+      if(confirm("This link connects you to the team's live shared tracker.\n\nJoin it? The team's data will replace whatever is saved on this device.")){
+        // Let the team's data win the first merge: age out local timestamps.
+        state.tasks.forEach(function(t){ t.updatedAt = 0; });
+        state.sync = { url: String(join.url) };
+        persist(false);
+      }
+    }
+  }
+})();
+render();
+if(syncDocUrl()) connectSync();
+if(autoJoinedNow && syncDocUrl()){
+  toast("Connected to the team's live tracker — updates sync automatically.", null, null, 4500);
+}
+
+})();
+</script>
+</body>
+</html>
