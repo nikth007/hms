@@ -98,9 +98,6 @@
   .sync-pill.live .dot{animation:pulse 2s infinite;}
   .sync-pill.offline,.sync-pill.connecting{background:#FFF3CD;color:#8A6D00;}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-  .setup-steps{padding-left:20px;font-size:12.5px;color:var(--text-soft);margin:0 0 14px;}
-  .setup-steps li{margin-bottom:6px;}
-  .setup-steps code{background:var(--gray-badge);padding:1px 5px;border-radius:4px;font-size:11.5px;}
   .share-sec{margin-bottom:16px;}
   .share-sec h4{font-size:13px;font-weight:600;margin-bottom:6px;}
   .warn-box{
@@ -594,7 +591,6 @@
     <div class="gear-menu" id="gearMenu">
       <button id="btnSyncSetup">Live sync settings…</button>
       <button id="btnShowHelp">Show column guide</button>
-      <button id="btnReset" class="danger">Reset to original task list</button>
     </div>
   </div>
   </div>
@@ -736,23 +732,17 @@
   <div class="modal">
     <div class="modal-head"><h3>Live sync — updates on every device, instantly</h3><button class="modal-close" data-close="syncOverlay">×</button></div>
     <div class="modal-body">
-      <p class="hint">With live sync ON, any change anyone makes appears on everyone else's open tracker within a couple of seconds. <strong>Only one person needs to do this setup, once.</strong> Everyone else just opens the share link.</p>
-      <ol class="setup-steps">
-        <li>Go to <strong>console.firebase.google.com</strong> and sign in with any Google account → <strong>Create a project</strong> (free, no card needed). Skip Analytics.</li>
-        <li>In the left menu: <strong>Build → Realtime Database → Create database</strong> → pick a location → choose <strong>"Start in test mode"</strong>.</li>
-        <li>Copy the database URL shown at the top (looks like <code>https://yourproject-default-rtdb.firebaseio.com/</code>) and paste it below.</li>
-        <li>Click <strong>Connect</strong>, then use <strong>"Copy share link"</strong> in the top bar — that link carries the connection, so colleagues who open it join live sync automatically.</li>
-      </ol>
+      <p class="hint">Live sync is <strong>built into this tracker</strong> — everyone who opens the page link shares one live copy, and any change appears on every device within a couple of seconds. There is nothing to set up.</p>
       <div class="field-row">
-        <label>Database URL</label>
-        <input type="text" id="syncUrlInput" placeholder="https://yourproject-default-rtdb.firebaseio.com/">
+        <label>Team database URL (advanced)</label>
+        <input type="text" id="syncUrlInput" placeholder="https://yourproject-default-rtdb.firebasedatabase.app/">
       </div>
-      <p class="hint">Note: test mode expires after 30 days — in Firebase, open the <strong>Rules</strong> tab and set both <code>.read</code> and <code>.write</code> to <code>true</code> to keep it running. Anyone who has the link can edit, so share it only within the team and don't store anything confidential.</p>
+      <p class="hint">Only change this if the team ever moves to a new database — everyone must use the same URL to see the same data. Heads-up: a Firebase database created in "test mode" stops accepting changes after 30 days; in Firebase open the <strong>Rules</strong> tab and set both <code>.read</code> and <code>.write</code> to <code>true</code> to keep it running. Anyone with the page link can edit, so don't store anything confidential.</p>
     </div>
     <div class="modal-foot">
       <button class="btn" id="btnSyncOff" style="margin-right:auto;color:#C04A1E;">Turn off sync</button>
       <button class="btn" data-close="syncOverlay">Cancel</button>
-      <button class="btn btn-primary" id="btnSyncConnect">Connect</button>
+      <button class="btn btn-primary" id="btnSyncConnect">Save</button>
     </div>
   </div>
 </div>
@@ -2208,6 +2198,7 @@ $("btnSyncConnect").addEventListener("click", function(){
   toast("Live sync on. Now click “Copy share link” and send it to the team.", null, null, 5000);
 });
 $("btnSyncOff").addEventListener("click", function(){
+  if(!confirm("Turn off live sync on this device?\n\nThis device will stop seeing the team's updates, and the team will stop seeing changes made here, until sync is reconnected.")) return;
   // optOut stops the baked-in team database from auto-reconnecting on reload.
   state.sync = { url: "", optOut: true };
   persist(false);
@@ -2235,7 +2226,7 @@ function setView(v){
 $("tabTasks").addEventListener("click", function(){ setView("tasks"); });
 $("tabDash").addEventListener("click", function(){ setView("dash"); });
 
-/* ---------- settings / help / reset ---------- */
+/* ---------- settings / help ---------- */
 $("btnGear").addEventListener("click", function(e){
   e.stopPropagation();
   $("gearMenu").classList.toggle("open");
@@ -2259,23 +2250,6 @@ $("btnShowHelp").addEventListener("click", function(){
   render();
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
-$("btnReset").addEventListener("click", function(){
-  $("gearMenu").classList.remove("open");
-  var syncOn = !!syncDocUrl();
-  var msg = "Reset the tracker?\n\nThis deletes ALL changes and restores the original task list."
-    + (syncOn ? "\n\nLive sync is ON — this resets the tracker for EVERYONE connected." : "")
-    + "\n\nThis cannot be undone.";
-  if(!confirm(msg)) return;
-  recordHistory();
-  var keepSync = state.sync;
-  localStorage.removeItem(LS_KEY);
-  state = freshState();
-  state.sync = keepSync;
-  persist();
-  render();
-  toast("Tracker reset to the original task list.", null, null, 3500);
-});
-
 /* ---------- filter events ---------- */
 $("fWs").addEventListener("change", function(){ state.filters.ws = this.value; persist(false); render(); });
 $("fStatus").addEventListener("change", function(){ state.filters.status = this.value; persist(false); render(); });
